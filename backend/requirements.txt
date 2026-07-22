@@ -1,0 +1,31 @@
+# Web Framework & Server
+fastapi
+uvicorn[standard]
+
+openpyxl
+python-calamine
+
+# Database & ORM
+sqlalchemy
+psycopg2-binary
+
+# Security & Auth
+python-jose[cryptography]
+passlib[argon2]
+python-multipart
+email-validator
+
+# Data & Integration
+pandas
+requests
+qrcode
+
+# Configuration & Utilities
+pydantic
+pydantic-settings
+python-dotenv
+loguru
+
+# Testing
+pytest
+httpx

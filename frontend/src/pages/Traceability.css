@@ -1,0 +1,247 @@
+/* =========================================================
+   CONTAINER & HEADERS
+   ========================================================= */
+.traceability-container{
+    min-height:100vh;
+    padding:30px;
+    background:#f4f7fb;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.header-section{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fff;
+    padding:20px 25px;
+    border-radius:14px;
+    margin-bottom:25px;
+    box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+
+.header-section h1{
+    font-size:34px;
+    color:#0B5ED7;
+    margin-bottom:5px;
+}
+
+.sub-tag{
+    color:#64748b;
+    font-size:15px;
+}
+/* =========================================================
+   CONTROL ACTIONS
+   ========================================================= */
+.search-box{
+    width:280px;
+    padding:12px 16px;
+    border:1px solid #d9e2ef;
+    border-radius:10px;
+    background:#fff;
+    transition:.3s;
+}
+
+.search-box:focus{
+    outline:none;
+    border-color:#0B5ED7;
+    box-shadow:0 0 0 4px rgba(11,94,215,.12);
+}
+
+.back-btn{
+    padding:11px 18px;
+    border:none;
+    border-radius:10px;
+    background:#0B5ED7;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.back-btn:hover{
+    background:#004FC5;
+}
+
+/* =========================================================
+   TABLE ARCHITECTURE (GRID MATRIX)
+   ========================================================= */
+.table-wrapper{
+    background:#fff;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 10px 28px rgba(0,0,0,.08);
+}
+
+.trace-table {
+  width: 100%;
+  border-collapse: collapse; /* Prevents double-thick border visual bugs */
+  text-align: center;
+  font-size: 13px;
+  color: #334155;
+}
+
+.trace-table th{
+    padding:15px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.trace-table td{
+    padding:13px;
+}
+
+/* Super Column Headers */
+.super-header th {
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.meta-head { background-color: #1e293b; } /* Slate 800 */
+.sho-head  { background-color: #1e3a8a; } /* Blue 900 */
+.tb-head   { background-color: #7c2d12; } /* Orange 900 */
+.ch-head   { background-color: #065f46; } /* Emerald 800 */
+
+/* Sub Row Headers */
+.sub-header th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Row Hover Interaction */
+.data-row{
+    transition:.2s;
+}
+
+.data-row:hover td{
+    background:#eef6ff;
+}
+
+/* Spanned Cells Lock overrides */
+.merged-mo-cell, 
+.merged-channel-cell {
+  background-color: #ffffff !important; 
+}
+
+.mo-link-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.mo-link-btn:hover {
+  color: #1d4ed8;
+}
+
+/* Typography Utilities */
+.fw-bold {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.qty-cell {
+  font-weight: 600;
+  color: #334155;
+}
+
+/* =========================================================
+   STATUS BADGES SYSTEM
+   ========================================================= */
+.status-badge{
+    padding:6px 14px;
+    border-radius:30px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.status-badge.completed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.in-process,
+.status-badge.pending,
+.status-badge.default {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.status-badge.running {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-badge.allocated {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.status-badge.in-transit {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+/* =========================================================
+   ANIMATIONS, SPINNING & APP STATES
+   ========================================================= */
+.empty-state {
+  text-align: center;
+  padding: 40px !important;
+  color: #64748b;
+  font-style: italic;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.error-box {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  border: 1px solid #f87171;
+}
+
+.initializing-box{
+    padding:35px;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
+.initializing-box strong { 
+  color: #1e3a8a; 
+}
+
+.initializing-box .sub-text { 
+  color: #3b82f6; 
+  font-size: 14px; 
+  margin-top: 8px; 
+}
+
+/* Pure CSS Engine Hardware Spinner */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #bfdbfe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  animation: spin-kf 0.8s linear infinite;
+}
+
+@keyframes spin-kf {
+  to { transform: rotate(360deg); }
+}
