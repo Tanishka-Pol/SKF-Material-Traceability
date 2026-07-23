@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import './Afterchannel.css';
+import ProcessCard from "../components/ProcessCard/ProcessCard";
+import { processData } from "../data/processData";
+import Legend from "../components/Legend/Legend";
+import Flow from "../components/Flow/Flow";
+import axios from "axios";
+import { FaArrowDown, FaArrowUp,  FaBoxOpen, FaTrashAlt , FaExclamationTriangle,} from "react-icons/fa";
  
-const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const API = 'https://scm-backend-pshv.onrender.com';
  
 const Afterchannel = () => {
-  const [activeTab, setActiveTab] = useState('accurate');
+  console.log("AFTERCHANNEL FILE LOADED");
+  const [activeTab, setActiveTab] = useState(
+  localStorage.getItem("activeTab") || "accurate"
+  );
   const [entryMode, setEntryMode] = useState('IN'); 
   const [moCache, setMoCache] = useState({});
-  const [ledgers, setLedgers] = useState({ accurate: [], cps: [], rework: [], dismantling: [], autopackaging: [], fps: [] });
+  const [ledgers, setLedgers] = useState({  transitbuffer: [], channel: [], accurate: [], cps: [], rework: [], dismantling: [], autopackaging: [], fps: [] });
   
   // Scrap State 
   const [scrapData, setScrapData] = useState([]);
   const [scrapSearchQuery, setScrapSearchQuery] = useState('');
   const [expandedScrapMOs, setExpandedScrapMOs] = useState({});
-  const [expandedScrapVariants, setExpandedScrapVariants] = useState({}); 
+  const [expandedScrapReasons, setExpandedScrapReasons] = useState({});
 
   const [moNumber, setMoNumber] = useState('');
   const [selectedVariant, setSelectedVariant] = useState('');
@@ -50,6 +59,60 @@ const Afterchannel = () => {
   const [pvsmType, setPvsmType] = useState('');
   const [isFlowLoaded, setIsFlowLoaded] = useState(false);
 
+  // Weighing States
+  const [sampleWeight, setSampleWeight] = useState('');
+  const [grossWeight, setGrossWeight] = useState('');
+  const [stdBoxQty, setStdBoxQty] = useState(0);
+  const [singleQty, setSingleQty] = useState(0);
+
+  const [channelEntries, setChannelEntries] = useState([]);
+
+  const [manualQty, setManualQty] = useState("");
+
+  const [twoQty, setTwoQty] = useState(0);
+  const [threeQty, setThreeQty] = useState(0);
+  const [palletIncluded, setPalletIncluded] = useState(false);
+
+  const [stdQty, setStdQty] = useState(0);
+
+  const tareWeight =
+      singleQty * 18 +
+      twoQty * 21.6 +
+      threeQty * 31 +
+      (palletIncluded ? 7.1 : 0);
+
+  const [capturedWeight, setCapturedWeight] = useState(false);
+
+  const [selectedContainer, setSelectedContainer] = useState('Single Collar');
+
+  const netWeight =
+  Number(grossWeight || 0) -
+  Number(tareWeight || 0);
+
+  const finalQty =
+  sampleWeight > 0
+    ? Math.floor(netWeight / sampleWeight)
+    : 0;
+
+  const [tbOperator, setTbOperator] = useState('');
+  const [tbChannel, setTbChannel] = useState('');
+  const [tbShift, setTbShift] = useState('');
+  const [tbMo, setTbMo] = useState('');
+
+  const [tbContainerType, setTbContainerType] = useState('18');
+  const [tbPallet, setTbPallet] = useState(false);
+
+  const [tbRingSide, setTbRingSide] = useState('');
+  const [tbRingType, setTbRingType] = useState('');
+
+  const [tbSampleWeight, setTbSampleWeight] = useState('');
+  const [tbContainerQty, setTbContainerQty] = useState(1);
+
+  const [tbGrossWeight, setTbGrossWeight] = useState(0);
+
+  const [tbStdQty, setTbStdQty] = useState(0);
+  const [tbFinalQty, setTbFinalQty] = useState(0);
+
   useEffect(() => {
     fetchMasterData();
     fetchLedgers();
@@ -59,7 +122,11 @@ const Afterchannel = () => {
     if (activeTab === 'scrapData' && scrapData.length === 0) {
       fetchScrapData();
     }
-  }, [activeTab, scrapData.length]);
+  }, [activeTab]);
+
+  useEffect(() => {
+  localStorage.setItem("activeTab", activeTab);
+  }, [activeTab]);
  
   const fetchMasterData = async () => {
     try {
@@ -74,23 +141,33 @@ const Afterchannel = () => {
   };
  
   const fetchLedgers = async () => {
-    try {
-      const res = await fetch(`${API}/api/afterchannel/summary_ledgers`);
-      const json = await res.json();
-      if (json.status === 'success' || json.data) {
-        setLedgers({
-          accurate: json.data?.accurate || [],
-          cps: json.data?.cps || [],
-          rework: json.data?.rework || [],
-          dismantling: json.data?.dismantling || json.data?.vibration || [],
-          autopackaging: json.data?.autopackaging || [],
-          fps: json.data?.fps || []
-        });
-      }
-    } catch (err) {
-      console.error("Ledger Sync Failure:", err);
+  try {
+    const res = await fetch(`${API}/api/afterchannel/summary_ledgers`);
+    const json = await res.json();
+
+    if (json.status === 'success' || json.data) {
+      setLedgers({
+        channel: json.data?.channel || [],
+
+        accurate: json.data?.accurate || [],
+        cps: json.data?.cps || [],
+        rework: json.data?.rework || [],
+
+        dismantling:
+          json.data?.dismantling ||
+          json.data?.vibration ||
+          [],
+
+        autopackaging:
+          json.data?.autopackaging || [],
+
+        fps: json.data?.fps || []
+      });
     }
-  };
+  } catch (err) {
+    console.error("Ledger Sync Failure:", err);
+  }
+};
 
   const fetchScrapData = async () => {
     try {
@@ -100,6 +177,7 @@ const Afterchannel = () => {
       if (json.status === 'success') {
         setScrapData(json.data || []);
       } else {
+        // This alerts you if there is a parsing error, missing columns, or bad URL
         console.error("Backend returned error:", json.message);
         alert(`Failed to load Scrap Data:\n\n${json.message}`);
       }
@@ -108,18 +186,7 @@ const Afterchannel = () => {
       alert("Network Error: Could not reach the server to fetch scrap data.");
     }
   };
- 
-  const getQtyFromRow = (row) => {
-    for (const key in row) {
-      const cleanKey = key.toLowerCase().replace(/[^a-z]/g, '');
-      if (['qty', 'quantity', 'production', 'target', 'plan', 'total'].some(w => cleanKey.includes(w))) {
-        const val = parseFloat(String(row[key]).replace(/,/g, ''));
-        if (!isNaN(val) && val > 0) return val;
-      }
-    }
-    return 0;
-  };
- 
+
   const getTypeFromRow = (row) => {
     for (const key in row) {
       const cleanKey = key.toLowerCase().replace(/[^a-z]/g, '');
@@ -129,6 +196,19 @@ const Afterchannel = () => {
     }
     return 'UNKNOWN_VARIANT'; 
   };
+
+  const getQtyFromRow = (row) => {
+  return Number(
+    row.qty ??
+    row.quantity ??
+    row.production_quantity ??
+    row.target_production_quantity ??
+    row.target_qty ??
+    row.targetQuantity ??
+    row.value ??
+    0
+  );
+};
  
   const calculateProduction = (rawRows, variantToMatch) => {
     if (!rawRows || !Array.isArray(rawRows)) return 0;
@@ -171,7 +251,98 @@ const Afterchannel = () => {
       setActualProductionQty(calculateProduction(moCache[moNumber.toUpperCase()], variantName));
     }
   };
+
+  const handleCaptureWeight = () => {
+  setGrossWeight(280);
+  };
+
+  const handleChannelSave = () => {
+  const newEntry = {
+    id: Date.now(),
+
+    mo: moNumber,
+    bearing_type: selectedVariant,
+
+    in_date: new Date().toLocaleDateString(),
+
+    material_in_from: "CHANNEL",
+
+    qty_in: finalQty,
+
+    gross_weight: grossWeight,
+    tare_weight: tareWeight,
+    net_weight: netWeight,
+
+    sample_weight: sampleWeight,
+
+    next_station: "PENDING",
+
+    qty_sent: 0
+  };
+
+  setLedgers(prev => ({
+  ...prev,
+  channel: [
+    newEntry,
+    ...(prev.channel || [])
+  ]
+}));
+
+  console.log("Saved Entry:", newEntry);
+};
+
+ const handleTransitSave = () => {
+
+  const transitEntry = {
+    timestamp: new Date().toLocaleString(),
+
+    operator: tbOperator,
+    channel: tbChannel,
+    shift: tbShift,
+    mo: moNumber,
+
+    containerType: tbContainerType,
+    pallet: tbPallet,
+
+    ringSide: tbRingSide,
+    ringType: tbRingType,
+
+    sampleWeight: tbSampleWeight,
+    containerQty: tbContainerQty,
+
+    grossWeight: tbGrossWeight,
+
+    stdQty: tbStdQty,
+    finalQty: tbFinalQty
+  };
+
+  setLedgers(prev => {
+    console.log("PREV LEDGERS:", prev);
+    console.log("PREV TRANSIT:", prev?.transitbuffer);
+
+    return {
+      ...prev,
+      transitbuffer: [
+        transitEntry,
+        ...(Array.isArray(prev?.transitbuffer)
+          ? prev.transitbuffer
+          : [])
+      ]
+    };
+  });
+
+  console.log("Transit Saved:", transitEntry);
+};
  
+  const handleLoadFlow = () => {
+      if (!pvsmMo) {
+          alert("Please select MO");
+          return;
+      }
+
+      setIsFlowLoaded(true);
+  };
+
   const handleFormSubmit = async (e, endpoint) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -203,21 +374,99 @@ const Afterchannel = () => {
       if (snakeKey !== key) payload[snakeKey] = finalValue;
     }
  
-    try {
-      const targetEndpoint = endpoint === 'dismantling' ? 'vibration' : endpoint;
-      const response = await fetch(`${API}/api/afterchannel/${targetEndpoint}`, {
+   try {
+
+  if (endpoint === 'channel') {
+
+    const channelRecord = {
+      mo: payload.mo,
+      bearing_type: payload.bearing_type,
+
+      out_date: payload.outDate,
+      shift_out: payload.shiftOut,
+
+      ir_sent_qty: payload.irSentQty,
+      ir_next_station: payload.irNextStation,
+
+      or_sent_qty: payload.orSentQty,
+      or_next_station: payload.orNextStation,
+
+      bearing_sent_qty: payload.bearingSentQty,
+      bearing_next_station: payload.bearingNextStation
+    };
+
+    setLedgers(prev => ({
+      ...prev,
+      channel: [...(prev.channel || []), channelRecord]
+    }));
+
+    const stationMappings = [
+      {
+        qty: payload.irSentQty,
+        station: payload.irNextStation
+      },
+      {
+        qty: payload.orSentQty,
+        station: payload.orNextStation
+      },
+      {
+        qty: payload.bearingSentQty,
+        station: payload.bearingNextStation
+      }
+    ];
+
+    stationMappings.forEach(item => {
+
+      if (!item.station || !item.qty) return;
+
+      const targetStation = item.station.toLowerCase();
+
+      const newEntry = {
+        mo: payload.mo,
+        bearing_type: payload.bearing_type,
+
+        in_date: payload.outDate,
+        material_in_from: 'Channel',
+
+        qty_in: item.qty
+      };
+
+      setLedgers(prev => ({
+        ...prev,
+        [targetStation]: [
+          ...(prev[targetStation] || []),
+          newEntry
+        ]
+      }));
+    });
+
+  } else {
+
+    const targetEndpoint =
+      endpoint === 'dismantling'
+        ? 'vibration'
+        : endpoint;
+
+    const response = await fetch(
+      `${API}/api/afterchannel/${targetEndpoint}`,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+      }
+    );
+
+    if (!response.ok)
+      throw new Error(`HTTP Error ${response.status}`);
+  }
       
       alert(editingRecord ? "Entry Updated Successfully!" : "Operational Record Logged Successfully!");
       e.target.reset();
       setEditingRecord(null);
       resetComponentScrapStates();
-      await fetchLedgers();
+      if (endpoint !== 'channel') {
+  await fetchLedgers();
+}
     } catch (err) {
       alert("Submission Error: " + err.message);
     }
@@ -392,7 +641,124 @@ const Afterchannel = () => {
       const typeMatch = (l.bearing_type || l.type || l.item_type || '').toUpperCase().includes(search);
       return moMatch || typeMatch;
     });
- 
+
+    if (deptKey === "transitbuffer") {
+
+  if (records.length === 0) {
+    return (
+      <div className="ledger-empty-card">
+        <div className="ledger-empty-header">
+          <span className="ledger-empty-title">
+            {deptName} - Global Entry Log
+          </span>
+        </div>
+        No entries found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="ledger-card">
+
+      <div className="ledger-card-header">
+        <span>{deptName} - Global Entry Log</span>
+      </div>
+
+      <div className="table-scroll">
+        <table className="data-table">
+
+          <thead>
+            <tr>
+              <th>Operator</th>
+              <th>MO</th>
+              <th>Channel</th>
+              <th>Shift</th>
+              <th>Container</th>
+              <th>Gross Weight</th>
+              <th>Std Qty</th>
+              <th>Final Qty</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {records.map((r, i) => (
+              <tr key={i}>
+                <td>{r.operator || "-"}</td>
+                <td>{r.mo || "-"}</td>
+                <td>{r.channel || "-"}</td>
+                <td>{r.shift || "-"}</td>
+                <td>{r.containerType || "-"}</td>
+                <td>{r.grossWeight || "-"}</td>
+                <td>{r.stdQty || "-"}</td>
+                <td>{r.finalQty || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  );
+}
+
+if (deptKey === "channel") {
+
+  if (records.length === 0) {
+    return (
+      <div className="ledger-empty-card">
+        <div className="ledger-empty-header">
+          <span className="ledger-empty-title">
+            CHANNEL - Global Entry Log
+          </span>
+        </div>
+        No entries found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="ledger-card">
+
+      <div className="ledger-card-header">
+        <span>CHANNEL - Global Entry Log</span>
+      </div>
+
+      <div className="table-scroll">
+        <table className="data-table">
+
+          <thead>
+            <tr>
+              <th>MO</th>
+              <th>Variant</th>
+              <th>Gross Wt</th>
+              <th>Tare Wt</th>
+              <th>Net Wt</th>
+              <th>Sample Wt</th>
+              <th>Final Qty</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {records.map((r, i) => (
+              <tr key={i}>
+                <td>{r.mo || "-"}</td>
+                <td>{r.bearing_type || "-"}</td>
+                <td>{r.gross_weight || "-"}</td>
+                <td>{r.tare_weight || "-"}</td>
+                <td>{r.net_weight || "-"}</td>
+                <td>{r.sample_weight || "-"}</td>
+                <td>{r.qty_in || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  );
+}
     if (records.length === 0) return (
       <div className="ledger-empty-card">
         <div className="ledger-empty-header">
@@ -454,7 +820,10 @@ const Afterchannel = () => {
     );
   };
 
+  // ================= P-VSM VISUAL FLOW RENDER (EXACT IMAGE REPLICA) =================
   const renderPVSMFlow = () => {
+    
+    // Filtering Data based on Top Controls
     const getFiltered = (deptKey) => {
         let data = ledgers[deptKey] || [];
         if (isFlowLoaded) {
@@ -510,109 +879,242 @@ const Afterchannel = () => {
         commonScrap: { scrap: dismScrap }
     };
 
-    const NodeCard = ({ title, subtitle, icon, type, mIn, mOut, mScrap, visited, borderCls }) => (
-        <div className={`pvsm-card ${borderCls}`}>
-            <div className="pvsm-card-header">
-                <span className="pvsm-card-icon">{icon}</span>
-                <div className="pvsm-card-title-area">
-                    <h4>{title}</h4>
-                    <span>{subtitle}</span>
-                </div>
-            </div>
-            <div className="pvsm-card-metrics">
-                {mIn !== undefined && (
-                    <div className="pvsm-metric">
-                        <span className="pvsm-metric-icon green">↓</span>
-                        <label>Incoming</label>
-                        <strong className="green">{mIn}</strong>
-                        <sub>PCS</sub>
-                    </div>
-                )}
-                {mOut !== undefined && (
-                    <div className="pvsm-metric">
-                        <span className="pvsm-metric-icon blue">↑</span>
-                        <label>Outgoing</label>
-                        <strong className="blue">{mOut}</strong>
-                        <sub>PCS</sub>
-                    </div>
-                )}
-                {mScrap !== undefined && (
-                    <div className="pvsm-metric">
-                        <span className="pvsm-metric-icon red">🗑</span>
-                        <label>Scrap</label>
-                        <strong className="red">{mScrap}</strong>
-                        <sub>PCS</sub>
-                    </div>
-                )}
-            </div>
-            {visited && (
-                <div className="pvsm-card-footer">
-                    <span className={`pvsm-badge ${visited.includes('Visited') ? (borderCls==='border-green'?'green':'blue') : ''}`}>{visited}</span>
-                </div>
-            )}
-        </div>
-    );
 
+const NodeCard = ({
+    title,
+    subtitle,
+    icon,
+    type,
+    mIn,
+    mOut,
+    mScrap,
+    mLeftover,
+    mIR,
+    mOR,
+    visited,
+    borderCls
+}) => (
+
+<div className={`process-card-blueprint ${borderCls}`}>
+  <FaExclamationTriangle className="delta-icon-corner" />
+
+{/* Header */}
+<div className="card-header-bp">
+    <div className="header-top-row">
+
+        <div className="process-icon-box">
+            {icon}
+        </div>
+
+        <div className="title-wrapper">
+
+            <div className="title-row">
+
+                <h4 className="process-title">
+                    {title}
+                </h4>
+            </div>
+
+            <p className="process-subtitle">
+                {subtitle}
+            </p>
+
+        </div>
+    </div>
+</div>
+
+<div className="divider-bp" />
+
+{/* Metrics */}
+<div className="card-body-bp">
+    <div className="metrics-grid">
+
+        {mIn !== undefined && (
+            <div className="metric-col">
+                <FaArrowDown className="metric-icon incoming-icon" />
+                <span className="metric-label">Incoming</span>
+                <span className="metric-value value-incoming">{mIn}</span>
+                <span className="metric-unit">PCS</span>
+            </div>
+        )}
+
+        {mOut !== undefined && (
+            <div className="metric-col">
+                <FaArrowUp className="metric-icon outgoing-icon" />
+                <span className="metric-label">Outgoing</span>
+                <span className="metric-value value-outgoing">{mOut}</span>
+                <span className="metric-unit">PCS</span>
+            </div>
+        )}
+
+        {mIR !== undefined && (
+            <div className="metric-col">
+                <span className="metric-label">IR</span>
+                <span className="metric-value value-outgoing">{mIR}</span>
+                <span className="metric-unit">PCS</span>
+            </div>
+        )}
+
+        {mOR !== undefined && (
+            <div className="metric-col">
+                <span className="metric-label">OR</span>
+                <span className="metric-value value-outgoing">{mOR}</span>
+                <span className="metric-unit">PCS</span>
+            </div>
+        )}
+
+        {mScrap !== undefined && (
+            <div className="metric-col">
+                <FaTrashAlt className="metric-icon scrap-icon" />
+                <span className="metric-label">Scrap</span>
+                <span className="metric-value value-scrap">{mScrap}</span>
+                <span className="metric-unit">PCS</span>
+            </div>
+        )}
+        {mLeftover !== undefined && (
+          <div className="metric-col">
+
+              <FaBoxOpen className="metric-icon leftover-icon" />
+
+              <span className="metric-label">
+                  Leftover
+              </span>
+
+              <span className="metric-value value-outgoing">
+                  {mLeftover}
+              </span>
+
+              <span className="metric-unit">
+                  PCS
+              </span>
+
+          </div>
+      )}
+
+    </div>
+</div>
+
+    {/* Footer */}
+    <div className="card-footer-bp">
+
+        <div
+            className={`status-pill-bp ${
+                visited?.includes("Visited")
+                    ? "pill-finished"
+                    : "pill-not-visited"
+            }`}
+        >
+            {visited || "Not Visited"}
+
+        </div>
+
+    </div>
+
+</div>
+
+);
     return (
         <div className="pvsm-wrapper">
-            <div className="pvsm-header">
-                <div className="pvsm-title">
-                    <h2>P-VSM</h2>
-                    <span>Process Value Stream Mapping</span>
-                </div>
-                <div className="pvsm-controls">
-                    <div className="pvsm-control-group">
-                        <label>Select MO</label>
-                        <select className="pvsm-select" value={pvsmMo} onChange={e=>setPvsmMo(e.target.value)}>
-                            <option>Select MO</option>
-                            {[...new Set(allUniqueMos)].map(m => <option key={m}>{m}</option>)}
-                        </select>
-                    </div>
-                    <div className="pvsm-control-group">
-                        <label>Select Type</label>
-                        <select className="pvsm-select" value={pvsmType} onChange={e=>setPvsmType(e.target.value)}>
-                            <option>Select Type</option>
-                            {[...new Set(allUniqueVariants)].map(v => <option key={v}>{v}</option>)}
-                        </select>
-                    </div>
-                    <button className="pvsm-btn-load" onClick={() => setIsFlowLoaded(true)}>
-                        ▶ Load Flow
-                    </button>
-                </div>
-            </div>
+          <div className="pvsm-top-controls">
+             <div className="control-group">
+               <label>MO Type</label>
+              <select
+                  value={pvsmMo}
+                  onChange={(e) => setPvsmMo(e.target.value)}
+              >
+                  <option value="">Select MO</option>
+                  {dynamicMosList.map(mo => (
+                      <option key={mo} value={mo}>{mo}</option>
+                  ))}
+              </select>
+             </div>
+          
+     <div className="control-group">
+        <label>Variant</label>
 
+      <select
+        value={pvsmType}
+        onChange={(e) => setPvsmType(e.target.value)}
+      >
+        <option value="">Select Variant</option>
+
+        {dynamicVariantsList.map((variant) => (
+          <option key={variant} value={variant}>
+            {variant}
+          </option>
+        ))}
+      </select>
+
+      <datalist id="variants-list">
+        {dynamicVariantsList.map(v => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
+      </div>
+
+    <div className="control-group">
+        <label>Filter</label>
+        <select>
+            <option>Select Filter</option>
+            <option>IR</option>
+            <option>OR</option>
+            <option>Bearing</option>
+        </select>
+    </div>
+
+    <button onClick={handleLoadFlow}>
+        ▶ Load Flow
+    </button>
+</div>
             <div className="pvsm-canvas">
-                <div className="pvsm-grid">
-                    <div className="node-pos-dmstore">
-                        <NodeCard title="DM Store" subtitle="Material Storage" icon="🏛" mIn={0} mOut={0} visited="Not Visited" borderCls="" />
+                  <Flow />
+                  <div className="pvsm-grid">
+                    
+                    {/* ROW 1 */}
+                    <div className="node-pos-dmstore"
+                    data-flow-id="dm-store">
+                        <NodeCard title="DM Store" subtitle="Material Storage" icon="🏛"  mOut={0} mIR={0} mOR={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-sho">
-                        <NodeCard title="SHO" subtitle="Shared Handling" icon="📈" mIn={0} mOut={0} mScrap={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-sho"
+                     data-flow-id="sho">
+                        <NodeCard title="SHO" subtitle="Shared Handling" icon="📈" mScrap={0} mLeftover={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-transit">
-                        <NodeCard title="Transit Buffer" subtitle="Buffer" icon="🚚" mIn={0} mOut={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-transit"
+                     data-flow-id="transit-buffer">
+                        <NodeCard title="Transit Buffer" subtitle="Buffer" icon="🚚"  mOut={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-channel">
-                        <NodeCard title="Channel" subtitle="Production" icon="🖧" mIn={metrics.channel.in} mOut={metrics.channel.out} mScrap={metrics.channel.scrap} visited={metrics.channel.visited} borderCls="" />
+                    <div className="node-pos-channel"
+                     data-flow-id="channel">
+                        <NodeCard title="Channel" subtitle="Production" icon="🖧" mOut={metrics.channel.out}  visited={metrics.channel.visited} borderCls="" />
                     </div>
-                    <div className="node-pos-bearingstore">
+                    <div className="node-pos-bearingstore"
+                     data-flow-id="bearing-storage">
                         <NodeCard title="Bearing Storage" subtitle="Storage" icon="📦" mIn={0} mOut={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-cps">
+
+                    {/* ROW 2 */}
+                    <div className="node-pos-cps"
+                     data-flow-id="cps">
                         <NodeCard title="CPS" subtitle="Storage" icon="🏢" mIn={metrics.cps.in} mOut={metrics.cps.out} visited={metrics.cps.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-disassembly">
-                        <NodeCard title="Disassembly Area" subtitle="Rework" icon="🔧" mIn={metrics.disassembly.in} mOut={metrics.disassembly.out} mScrap={metrics.disassembly.scrap} visited={metrics.disassembly.visited} borderCls="border-dashed" />
+                    <div className="node-pos-disassembly"
+                     data-flow-id="disassembly">
+                        <NodeCard title="Disassembly Area" subtitle="Rework" icon="🔧" mIn={metrics.disassembly.in} mOut={metrics.disassembly.out} visited={metrics.disassembly.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-rework">
-                        <NodeCard title="Rework Area" subtitle="Repair" icon="🔄" mIn={metrics.rework.in} mOut={metrics.rework.out} mScrap={metrics.rework.scrap} visited={metrics.rework.visited} borderCls="border-dashed" />
+                    <div className="node-pos-rework"
+                     data-flow-id="rework">
+                        <NodeCard title="Rework Area" subtitle="Repair" icon="🔄" mIn={metrics.rework.in} mOut={metrics.rework.out}  visited={metrics.rework.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-accurate">
-                        <NodeCard title="Accurate" subtitle="Inspection" icon="🎯" mIn={metrics.accurate.in} mOut={metrics.accurate.out} visited={metrics.accurate.visited} borderCls="border-green" />
+                    <div className="node-pos-accurate"
+                     data-flow-id="accurate">
+                        <NodeCard title="Accurate" subtitle="Inspection" icon="🎯"  mOut={metrics.accurate.out} visited={metrics.accurate.visited} borderCls="border-green" />
                     </div>
-                    <div className="node-pos-autopacking">
-                        <NodeCard title="Auto Packing" subtitle="Packing" icon="🏭" mIn={metrics.autoPacking.in} mOut={metrics.autoPacking.out} visited={metrics.autoPacking.visited} borderCls="border-green" />
+                    <div className="node-pos-autopacking"
+                     data-flow-id="auto-packing">
+                        <NodeCard title="Auto Packing" subtitle="Packing" icon="🏭"  mOut={metrics.autoPacking.out} visited={metrics.autoPacking.visited} borderCls="border-green" />
                     </div>
+
+                    {/* ROW 3 */}
                     <div className="node-pos-legend">
                         <div className="pvsm-legend">
                             <h4>Flow Legend</h4>
@@ -621,76 +1123,27 @@ const Afterchannel = () => {
                             <div className="pvsm-legend-item"><div className="pvsm-legend-line line-orange-dash"></div> Scrap Flow</div>
                         </div>
                     </div>
-                    <div className="node-pos-commonscrap">
+                    <div className="node-pos-commonscrap"
+                     data-flow-id="common-scrap">
                         <NodeCard title="Common Scrap" subtitle="Scrap" icon="🗑" mScrap={metrics.commonScrap.scrap} visited="Not Visited" borderCls="border-red" />
                     </div>
-                    <div className="node-pos-fps">
+                    <div className="node-pos-fps"
+                     data-flow-id="fps">
                         <NodeCard title="FPS" subtitle="Finished Product" icon="🛡" mIn={metrics.fps.in} mOut={metrics.fps.out} visited={metrics.fps.visited} borderCls="border-green" />
                     </div>
+
                 </div>
             </div>
         </div>
     );
   };
 
-  const getStructuredScrapData = () => {
+  const getFilteredScrapData = () => {
     let list = [...scrapData];
     if (scrapSearchQuery.trim()) {
         list = list.filter(s => s.mo.toLowerCase().includes(scrapSearchQuery.toLowerCase()));
     }
-    list.sort((a,b) => a.mo.localeCompare(b.mo));
-
-    return list.map(moRow => {
-        const variants = {};
-        let moIrTot = 0; let moOrTot = 0;
-        let moIrSho = 0; let moOrSho = 0;
-        let moIrChan = 0; let moOrChan = 0;
-
-        if (moRow.breakdown) {
-            Object.entries(moRow.breakdown).forEach(([reason, rData]) => {
-                if (rData.types) {
-                    Object.entries(rData.types).forEach(([vName, vStats]) => {
-                        if (!variants[vName]) {
-                            variants[vName] = {
-                                ir: { sho: 0, chan: 0, tot: 0 },
-                                or: { sho: 0, chan: 0, tot: 0 },
-                                reasons: {}
-                            };
-                        }
-
-                        const irTot = Number(vStats.IM || 0);
-                        const orTot = Number(vStats.OM || 0);
-
-                        // New direct mapping from the updated backend
-                        const irSho = Number(vStats.IM_sho || 0);
-                        const orSho = Number(vStats.OM_sho || 0);
-                        const irChan = Number(vStats.IM_chan || 0);
-                        const orChan = Number(vStats.OM_chan || 0);
-
-                        variants[vName].ir.tot += irTot; variants[vName].or.tot += orTot;
-                        variants[vName].ir.sho += irSho; variants[vName].or.sho += orSho;
-                        variants[vName].ir.chan += irChan; variants[vName].or.chan += orChan;
-
-                        moIrTot += irTot; moOrTot += orTot;
-                        moIrSho += irSho; moOrSho += orSho;
-                        moIrChan += irChan; moOrChan += orChan;
-
-                        variants[vName].reasons[reason] = {
-                            ir: { sho: irSho || '-', chan: irChan || '-', tot: irTot },
-                            or: { sho: orSho || '-', chan: orChan || '-', tot: orTot }
-                        };
-                    });
-                }
-            });
-        }
-
-        return {
-            mo: moRow.mo,
-            ir: { sho: moIrSho || '-', chan: moIrChan || '-', tot: moIrTot },
-            or: { sho: moOrSho || '-', chan: moOrChan || '-', tot: moOrTot },
-            variants: variants
-        };
-    });
+    return list.sort((a,b) => a.mo.localeCompare(b.mo));
   };
  
   return (
@@ -709,13 +1162,15 @@ const Afterchannel = () => {
       <div className="ac-header">
         <h1 className="ac-title">Afterchannel Processing</h1>
         <div className="tab-buttons">
-          {['accurate', 'cps', 'rework', 'dismantling', 'autopackaging', 'fps'].map(tab => (
+          {['transitbuffer','channel','accurate', 'cps', 'rework', 'dismantling', 'autopackaging', 'fps'].map(tab => (
             <button
               key={tab}
               className={`tab-pill tab-pill-${tab} ${activeTab === tab ? 'tab-pill-active' : ''}`}
               onClick={() => {setActiveTab(tab); setEditingRecord(null); setLedgerSearchQuery(''); setBearingFamily(''); resetComponentScrapStates();}}
             >
-              {tab.toUpperCase()}
+              {tab === 'transitbuffer'
+                ? 'TRANSIT BUFFER'
+                : tab.toUpperCase()}
             </button>
           ))}
           <button
@@ -739,7 +1194,7 @@ const Afterchannel = () => {
         </div>
       </div>
  
-      {activeTab !== 'summary' && activeTab !== 'visualFlow' && activeTab !== 'scrapData' && (
+      {activeTab !== 'summary' && activeTab !== 'visualFlow' && activeTab !== 'scrapData' &&  activeTab !== 'channel' && activeTab !== 'transitbuffer' && (
         <div className="filter-card">
           <div className="filter-row">
             <div className="field-group">
@@ -756,25 +1211,51 @@ const Afterchannel = () => {
             </div>
           </div>
           <div className="mode-toggle-row">
-            <button type="button" onClick={() => setEntryMode('IN')} className={`mode-btn mode-btn-in ${entryMode === 'IN' ? 'mode-btn-active' : ''}`}>📥 LOG IN (Receiving)</button>
-            <button type="button" onClick={() => setEntryMode('OUT')} className={`mode-btn mode-btn-out ${entryMode === 'OUT' ? 'mode-btn-active' : ''}`}>📤 LOG OUT (Dispatch)</button>
+            {activeTab !== 'channel' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setEntryMode('IN')}
+                className={`mode-btn mode-btn-in ${entryMode === 'IN' ? 'mode-btn-active' : ''}`}
+              >
+                📥 LOG IN (Receiving)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEntryMode('OUT')}
+                className={`mode-btn mode-btn-out ${entryMode === 'OUT' ? 'mode-btn-active' : ''}`}
+              >
+                📤 LOG OUT (Dispatch)
+              </button>
+            </>
+          )}
             {editingRecord && <button type="button" onClick={() => { setEditingRecord(null); setMoNumber(''); setSelectedVariant(''); setBearingFamily(''); resetComponentScrapStates(); }} className="cancel-edit-btn">Cancel Edit</button>}
           </div>
         </div>
       )}
  
       <div className="ac-content">
-        {['accurate', 'cps', 'rework', 'autopackaging', 'fps'].includes(activeTab) && (
+        {['transitbuffer', 'channel', 'accurate', 'cps', 'rework', 'autopackaging', 'fps'].includes(activeTab) && (
           <div>
             <form key={editingRecord ? editingRecord.id : 'new'} onSubmit={(e) => handleFormSubmit(e, activeTab)}>
               <fieldset className={`form-fieldset ${entryMode === 'OUT' ? 'form-fieldset-out' : ''}`}>
               <div className="form-card-title">
-                {activeTab.toUpperCase()} - {entryMode === "IN" ? "Receiving Log" : "Dispatch Log"}
+                  {activeTab === 'channel'
+                    ? 'CHANNEL ENTRY'
+                    : activeTab === 'transitbuffer'
+                    ? 'TRANSIT BUFFER ENTRY'
+                    : `${activeTab.toUpperCase()} - ${entryMode === 'IN' ? 'Receiving Log' : 'Dispatch Log'}`
+                  }
               </div>
-
               <div className="form-card-body">
-                <div className="form-grid-3">
-                    {entryMode === 'IN' ? (
+
+                   <div className={
+                      ['channel','transitbuffer'].includes(activeTab)
+                        ? 'channel-layout'
+                        : 'form-grid-3'
+                    }>
+                   {!['channel','transitbuffer'].includes(activeTab) && entryMode === 'IN' ? (
                       <>
                         {activeTab === 'cps' && <div className="field-group"><label className="field-label">Item</label><select name="item" defaultValue={editingRecord?.item_type || ''} className="field-input"><option></option><option>Seal</option><option>Shield</option><option>OM Black</option><option>OM White</option><option>IM Black</option><option>IM White</option></select></div>}
                         <div className="field-group"><label className="field-label">In Date</label><input type="date" name="inDate" defaultValue={editingRecord?.in_date || ''} onChange={(e) => setFormDate(e.target.value)} className="field-input" required/></div>
@@ -786,21 +1267,595 @@ const Afterchannel = () => {
                         <div className="field-group"><label className="field-label">Qty In</label><input type="number" name="qtyIn" defaultValue={editingRecord?.qty_in || ''} className="field-input" required/></div>
                       </>
                     ) : (
-                      <>
-                        {activeTab === 'fps' ? (
+                      <>{activeTab === 'transitbuffer' ? (
+
+                        <div className="transit-layout">
+                          <div className="transit-left">
+                            <div className="channel-section-card">
+
+                              <h3 className="channel-section-title">
+                                STATION INFO
+                              </h3>
+
+                              <div className="channel-grid">
+
+                                <div className="field-group">
+                                  <label className="field-label">Operator Name</label>
+                                  <input
+                                    value={tbOperator}
+                                    onChange={(e) => setTbOperator(e.target.value)}
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Channel</label>
+
+                                  <select
+                                    value={tbChannel}
+                                    onChange={(e) => setTbChannel(e.target.value)}
+                                    className="field-input"
+                                  >
+                                    <option>Select Channel</option>
+                                    <option>CH02</option>
+                                    <option>CH03</option>
+                                    <option>CH04</option>
+                                    <option>CH05</option>
+                                    <option>T3</option>
+                                    <option>T4</option>
+                                    <option>T5</option>
+                                    <option>T6</option>
+                                  </select>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Shift</label>
+
+                                  <select
+                                    value={tbShift}
+                                    onChange={(e) => setTbShift(e.target.value)}
+                                    className="field-input"
+                                  >
+                                    <option>Select Shift</option>
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                  </select>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">MO Number</label>
+
+                                  <input
+                                    list="mo-list"
+                                    value={moNumber}
+                                    onChange={(e) => setMoNumber(e.target.value)}
+                                    onBlur={handleMoBlur}
+                                    placeholder="Select or Type MO..."
+                                    className="field-input"
+                                    required
+                                  />
+                                </div>
+
+                              </div>
+                            </div>
+
+                            {/* CALCULATION SETTINGS */}
+
+                            <div className="channel-section-card">
+
+                              <h3 className="channel-section-title">
+                                CALCULATION SETTINGS
+                              </h3>
+
+                              <div className="channel-grid">
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    Container Type
+                                  </label>
+
+                                  <select
+                                    value={tbContainerType}
+                                    onChange={(e) => setTbContainerType(e.target.value)}
+                                    className="field-input"
+                                  >
+                                    <option value="7.8">Tote Box (7.8kg)</option>
+                                    <option value="22.2">Blue Bin (22.2kg)</option>
+                                    <option value="18">Single Collar GSP(18kg)</option>
+                                    <option value="21.6">Two Collar GSP(21.6kg)</option>
+                                    <option value="31">Three Collar GSP(31kg)</option>
+                                  </select>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    Include Pallet (7.1 kg)
+                                  </label>
+
+                                  <div style={{ paddingTop: "12px" }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={tbPallet}
+                                      onChange={(e) => setTbPallet(e.target.checked)}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    IM / OM Type
+                                  </label>
+
+                                  <select
+                                    value={tbRingSide}
+                                    onChange={(e) => setTbRingSide(e.target.value)}
+                                    className="field-input"
+                                  >
+                                    <option>Select Type</option>
+                                    <option value="IM">IM</option>
+                                    <option value="OM">OM</option>
+                                  </select>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    Ring Type
+                                  </label>
+
+                                  <input
+                                    value={tbRingType}
+                                    onChange={(e) => setTbRingType(e.target.value)}
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    Sample Weight
+                                  </label>
+
+                                  <input
+                                    value={tbSampleWeight}
+                                    onChange={(e) => setTbSampleWeight(e.target.value)}
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    No. Containers
+                                  </label>
+
+                                  <input
+                                    type="number"
+                                    value={tbContainerQty}
+                                    onChange={(e) => setTbContainerQty(e.target.value)}
+                                    className="field-input"
+                                  />
+                                </div>
+
+                              </div>
+
+                              <button
+                                type="button"
+                                className="submit-btn submit-btn-in"
+                                style={{ marginTop: "20px" }}
+                                onClick={handleTransitSave}
+                              >
+                                FINALIZE & SAVE
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                          {/* RIGHT SIDE */}
+
+                          <div className="transit-right">
+
+                            <div className="live-scale-card">
+
+                              <div className="qty-title">
+                                LIVE SCALE
+                              </div>
+
+                              <div className="live-weight-badge">
+                                {tbGrossWeight || "0"} kg
+                              </div>
+
+                              <button
+                                className="capture-btn"
+                              >
+                                CAPTURE GROSS
+                              </button>
+                              <hr />
+
+                              <div className="qty-title">
+                                STANDARD BOX QTY
+                              </div>
+
+                              <div className="qty-number">
+                                {tbStdQty}
+                              </div>
+
+                              <div className="qty-title">
+                                FINAL QTY
+                              </div>
+
+                              <div className="qty-number big">
+                                {tbFinalQty}
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                        ) :
+                      activeTab === 'channel' ? (
+                        <div className="channel-screen">
+                          <div className="channel-left">
+
+                            {/* STATION INFO */}
+                            <div className="channel-section-card">
+                              <h3 className="channel-section-title">
+                                STATION INFO
+                              </h3>
+
+                              <div className="channel-grid">
+                                <div className="field-group">
+                                  <label className="field-label">Operator Name</label>
+                                  <input type="text" name="operatorName" className="field-input" />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Token Number</label>
+                                  <input type="text" name="tokenNumber" className="field-input" />
+                                </div>
+
+                               <div className="field-group">
+                                  <label className="field-label">MO Number</label>
+
+                                  <input
+                                    list="mo-list"
+                                    value={moNumber}
+                                    onChange={(e) => setMoNumber(e.target.value)}
+                                    onBlur={handleMoBlur}
+                                    placeholder="Select or Type MO..."
+                                    className="field-input"
+                                    required
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Pack Code</label>
+                                  <input type="text" name="packCode" className="field-input" />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Channel</label>
+                                  <select name="channel" className="field-input">
+                                    <option>Select Channel</option>
+                                    <option>CH02</option>
+                                    <option>CH03</option>
+                                    <option>CH04</option>
+                                    <option>CH05</option>
+                                    <option>T3</option>
+                                    <option>T4</option>
+                                    <option>T5</option>
+                                    <option>T6</option>
+                                  </select>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Shift</label>
+                                  <select className="field-input">
+                                    <option>Select Shift</option>
+                                    <option>1ST</option>
+                                    <option>2ND</option>
+                                    <option>3RD</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                            </div>
+
+                            {/* CONTAINER & TARE */}
+                            <div className="channel-section-card">
+                              <h3 className="channel-section-title">
+                                CONTAINER & TARE
+                              </h3>
+
+                              <div className="tare-cards">
+
+                                <div className="tare-card">
+                                  <h4>Single Collar</h4>
+
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={singleQty}
+                                    onChange={(e) => setSingleQty(Number(e.target.value))}
+                                    className="field-input"
+                                  />
+
+                                  <small>18.0 kg each</small>
+                                </div>
+
+                                <div className="tare-card">
+                                  <h4>Two Collar GSP</h4>
+
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={twoQty}
+                                    onChange={(e) => setTwoQty(Number(e.target.value))}
+                                    className="field-input"
+                                  />
+
+                                  <small>21.6 kg each</small>
+                                </div>
+
+                                <div className="tare-card">
+                                  <h4>Three Collar GSP</h4>
+
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={threeQty}
+                                    onChange={(e) => setThreeQty(Number(e.target.value))}
+                                    className="field-input"
+                                  />
+
+                                  <small>31.0 kg each</small>
+                                </div>
+
+                              </div>
+
+                              <div style={{ marginTop: "16px" }}>
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    checked={palletIncluded}
+                                    onChange={(e) => setPalletIncluded(e.target.checked)}
+                                  />
+                                  {" "}
+                                  Pallet Included (7.1 kg)
+                                </label>
+                              </div>
+
+                              <div className="field-group" style={{ marginTop: "15px" }}>
+                                <label className="field-label">
+                                  Total Tare Weight
+                                </label>
+
+                                <input
+                                  type="text"
+                                  value={tareWeight.toFixed(1)}
+                                  readOnly
+                                  className="field-input"
+                                />
+                              </div>
+                            </div>
+
+                            {/* CALCULATION SETTINGS */}
+                            <div className="channel-section-card">
+                              <h3 className="channel-section-title">
+                                CALCULATION SETTINGS
+                              </h3>
+
+                              <div className="channel-grid">
+                                <div className="field-group">
+                                  <label className="field-label">Type</label>
+                                  <input type="text" name="type" className="field-input" />
+                                </div>
+
+                               <div className="field-group">
+                                  <label className="field-label">Variant</label>
+
+                                  <input
+                                    list="variants-list"
+                                    value={selectedVariant}
+                                    onChange={handleVariantChange}
+                                    placeholder="Select or Type Variant..."
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group channel-full-width">
+                                  <label className="field-label">Manual Qty</label>
+                                  <input
+                                    type="number"
+                                    className="field-input"
+                                    value={manualQty}
+                                    onChange={(e) => setManualQty(e.target.value)}
+                                  />
+                                </div>
+
+                                <div className="field-group channel-full-width">
+                                  <label className="field-label">Sample Weight</label>
+                                  <div className="sample-row">
+                                      <input
+                                        type="number"
+                                        value={sampleWeight}
+                                        onChange={(e) => setSampleWeight(e.target.value)}
+                                        className="field-input"
+                                      />
+
+                                      <button
+                                        type="button"
+                                        className="sample-btn"
+                                      >
+                                        GET SAMPLE WT
+                                      </button>
+                                    </div>
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Gross Scale Weight (kg)</label>
+                                  <input
+                                    type="number"
+                                    step="0.001"
+                                    name="grossScaleWeight"
+                                    value={grossWeight}
+                                    onChange={(e) => setGrossWeight(Number(e.target.value))}
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">
+                                    Net Weight (kg)
+                                  </label>
+
+                                  <input
+                                    type="number"
+                                    value={netWeight.toFixed(2)}
+                                    readOnly
+                                    className="field-input"
+                                  />
+                                </div>
+
+                                <div className="field-group">
+                                  <label className="field-label">Final Qty</label>
+                                  <input
+                                    type="number"
+                                    name="finalQty"
+                                    value={finalQty}
+                                    readOnly
+                                    className="field-input"
+                                  />
+                                </div>
+                              </div>
+                              <div className="channel-save-btn-wrap">
+                                  <button
+                                    type="button"
+                                    className="submit-btn submit-btn-in"
+                                    onClick={handleChannelSave}
+                                  >
+                                    FINALIZE & SAVE
+                                  </button>
+                                </div>
+                            </div>
+                          </div>
+
+                          <div className="channel-right">
+
+                            <div className="qty-panel">
+
+                              <div className="qty-title">
+                                LIVE GROSS SCALE
+                              </div>
+
+                              <div className="live-weight-badge">
+                                {grossWeight || "0.00"} kg
+                              </div>
+
+                              <button
+                                type="button"
+                                className="capture-btn"
+                                onClick={handleCaptureWeight}
+                              >
+                                CAPTURE WEIGHT
+                              </button>
+
+                              <div className="scale-bottom">
+
+                                <div className="qty-title">
+                                  STANDARD BOX QTY
+                                </div>
+
+                                <div className="qty-number">
+                                  {stdBoxQty}
+                                </div>
+
+                                <div className="qty-title">
+                                  FINAL QTY
+                                </div>
+
+                                <div className="qty-number big">
+                                  {finalQty}
+                                </div>
+
+                              </div>
+                            </div>
+
+                          </div>                 
+                        </div>                        
+                      ) : activeTab === 'fps' ? (
+
                           <div className="field-group"><label className="field-label">Customer Order</label><input type="text" name="customerOrder" defaultValue={editingRecord?.customer_order || ''} className="field-input" required/></div>
-                        ) : (
-                          <div className="field-group"><label className="field-label">Next Station</label><input list="depts-list" name="nextStation" defaultValue={editingRecord?.next_station || ''} className="field-input"/></div>
+                       ) : (
+                          <div className="field-group">
+                            <label className="field-label">Next Station</label>
+                            <input
+                              list="depts-list"
+                              name="nextStation"
+                              defaultValue={editingRecord?.next_station || ''}
+                              className="field-input"
+                            />
+                          </div>
                         )}
-                        <div className="field-group"><label className="field-label">Qty Sent</label><input type="number" name="qtySent" defaultValue={editingRecord?.qty_sent || ''} className="field-input" required/></div>
-                        <div className="field-group"><label className="field-label">Out Date</label><input type="date" name="outDate" defaultValue={editingRecord?.out_date || ''} onChange={(e) => setFormDate(e.target.value)} className="field-input" required/></div>
-                        <div className="field-group"><label className="field-label">Shift Out</label><select name="shiftOut" defaultValue={editingRecord?.shift_out || ''} className="field-input"><option></option><option>1</option><option>2</option><option>3</option></select></div>
-                      </>
+
+                        {activeTab !== 'channel' && activeTab !== 'transitbuffer' && (
+                          <>
+                            <div className="field-group">
+                              <label className="field-label">Qty Sent</label>
+                              <input
+                                type="number"
+                                name="qtySent"
+                                defaultValue={editingRecord?.qty_sent || ''}
+                                className="field-input"
+                                required
+                              />
+                            </div>
+
+                            <div className="field-group">
+                              <label className="field-label">Out Date</label>
+                              <input
+                                type="date"
+                                name="outDate"
+                                defaultValue={editingRecord?.out_date || ''}
+                                onChange={(e) => setFormDate(e.target.value)}
+                                className="field-input"
+                                required
+                              />
+                            </div>
+
+                            <div className="field-group">
+                              <label className="field-label">Shift Out</label>
+                              <select
+                                name="shiftOut"
+                                defaultValue={editingRecord?.shift_out || ''}
+                                className="field-input"
+                              >
+                                <option></option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                              </select>
+                            </div>
+                          </>
+                        )}
+                        </>
                     )}
                 </div>
-              </div>
+                </div>
               </fieldset>
-              <button type="submit" className={`submit-btn ${entryMode === 'IN' ? 'submit-btn-in' : 'submit-btn-out'}`}>{editingRecord ? 'Update Entry' : 'Save Entry'}</button>
+             {activeTab !== 'transitbuffer' && activeTab !== 'channel' && (
+                <button
+                  type="submit"
+                  className={`submit-btn ${
+                    entryMode === 'IN'
+                      ? 'submit-btn-in'
+                      : 'submit-btn-out'
+                  }`}
+                >
+                  {editingRecord ? 'Update Entry' : 'Save Entry'}
+                </button>
+              )}
             </form>
             {renderDepartmentLedger(activeTab, activeTab.toUpperCase())}
           </div>
@@ -815,17 +1870,58 @@ const Afterchannel = () => {
               </div>
  
               {entryMode === 'IN' ? (
+
                 <fieldset className="form-fieldset">
-                    <div className="form-card-title">DISMANTLING - RECEIVING LOG</div>
-                    <div className="form-card-body">
-                       <div className="form-grid-3">
-                            <div className="field-group"><label className="field-label">In Date</label><input type="date" name="inDate" defaultValue={editingRecord?.in_date || ""} className="field-input" required/></div>
-                            <div className="field-group"><label className="field-label">Shift In</label><select name="shiftIn" defaultValue={editingRecord?.shift_in || ""} className="field-input"><option></option><option>1</option><option>2</option><option>3</option></select></div>
-                            <div className="field-group"><label className="field-label">PC No</label><input type="text" name="pc" defaultValue={editingRecord?.pc_no || ""} className="field-input"/></div>
-                            <div className="field-group"><label className="field-label">Material In From</label><input list="depts-list" name="materialInFrom" defaultValue={editingRecord?.material_in_from || ""} className="field-input"/></div>
-                            <div className="field-group"><label className="field-label">Qty In</label><input type="number" name="qtyIn" defaultValue={editingRecord?.qty_in || ""} className="field-input" required/></div>
-                        </div>
+
+                    <div className="form-card-title">
+                        ACCURATE - RECEIVING LOG
                     </div>
+
+                    <div className="form-card-body">
+
+                      <div className="form-grid-3">
+
+                    <div className="field-group">
+                        <label className="field-label">In Date</label>
+                        <input
+                            type="date"
+                            name="inDate"
+                            defaultValue={editingRecord?.in_date || ""}
+                            className="field-input"
+                            required
+                        />
+                    </div>
+
+                    <div className="field-group">
+                        <label className="field-label">Shift In</label>
+                        <select
+                            name="shiftIn"
+                            defaultValue={editingRecord?.shift_in || ""}
+                            className="field-input"
+                        >
+                            <option></option>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                        </select>
+                    </div>
+
+                    <div className="field-group">
+                        <label className="field-label">PC No</label><input type="text" name="pc"  defaultValue={editingRecord?.pc_no || ""} className="field-input" />
+                    </div>
+
+                    <div className="field-group">
+                        <label className="field-label">Material In From</label><input list="depts-list" name="materialInFrom"  defaultValue={editingRecord?.material_in_from || ""} className="field-input" />
+                    </div>
+
+                    <div className="field-group">
+                        <label className="field-label">Qty In</label><input type="number" name="qtyIn"  defaultValue={editingRecord?.qty_in || ""} className="field-input" required />
+                    </div>
+
+                </div>
+
+                    </div>
+
                 </fieldset>
               ) : (
                 <fieldset className="form-fieldset form-fieldset-out">
@@ -905,6 +2001,7 @@ const Afterchannel = () => {
                 <tbody>
                   {generateSummaryData().map(moData => (
                     <React.Fragment key={moData.mo}>
+                      {/* LEVEL 0: MO ROW */}
                       <tr onClick={() => setExpandedMOs(p => ({...p, [moData.mo]: !p[moData.mo]}))} className={`row-mo ${expandedMOs[moData.mo] ? 'row-mo-expanded' : ''}`}>
                         <td className="mo-toggle-cell">{expandedMOs[moData.mo] ? '▼' : '▶'} {moData.mo}</td>
                         <td>{moData.totals.rwIn || '-'}</td><td>{moData.totals.rwOut || '-'}</td>
@@ -924,6 +2021,7 @@ const Afterchannel = () => {
                         const vKey = `${moData.mo}-${variant}`;
                         return (
                           <React.Fragment key={variant}>
+                            {/* LEVEL 1: VARIANT ROW */}
                             <tr onClick={() => setExpandedVariants(p => ({...p, [vKey]: !p[vKey]}))} className="row-variant">
                               <td className="variant-toggle-cell">{expandedVariants[vKey] ? '▼' : '▶'} {variant}</td>
                               <td>{vData.rwIn || '-'}</td><td>{vData.rwOut || '-'}</td>
@@ -938,6 +2036,8 @@ const Afterchannel = () => {
                               <td className="cell-scrap-sub">{vData.ballScrap || '-'}</td>
                               <td className="cell-scrap-total">{vData.totalScrap || '-'}</td>
                             </tr>
+                                                        
+                             {/* LEVEL 2: COMPONENT DISPATCH DETAILS */}
                             {expandedVariants[vKey] && (
                               <tr><td colSpan="17" style={{padding: 0}}>{renderMoDispatchDetails(vData.records)}</td></tr>
                             )}
@@ -945,6 +2045,7 @@ const Afterchannel = () => {
                         );
                       })}
  
+                      {/* MO BOTTOM TOTAL ROW */}
                       {expandedMOs[moData.mo] && (
                         <tr className="row-total">
                           <td className="label-cell">TOTAL FOR {moData.mo}:</td>
@@ -954,6 +2055,7 @@ const Afterchannel = () => {
                           <td>{moData.totals.accIn || '-'}</td><td>{moData.totals.accOut || '-'}</td>
                           <td>{moData.totals.apIn || '-'}</td><td>{moData.totals.apOut || '-'}</td>
                           <td>{moData.totals.fpsIn || '-'}</td>
+
                           <td colSpan="5" className="scrap-grand-total-cell">Grand Total Scrap: {moData.totals.totalScrap}</td>
                         </tr>
                       )}
@@ -965,88 +2067,64 @@ const Afterchannel = () => {
           </div>
         )}
 
-        {/* ================= NEW SCRAP DATA VIEW WITH IR/OR COMPONENT LEVELING ================= */}
+        {/* ================= NEW SCRAP DATA VIEW ================= */}
         {activeTab === 'scrapData' && (
           <div className="summary-view scrap-summary-view">
             <div className="summary-view-header">
               <h2 className="summary-view-title" style={{color: 'var(--ac-red)'}}>Overall Scrap Integration (XA)</h2>
               <input type="text" placeholder="Search Master Order (MO)..." value={scrapSearchQuery} onChange={(e) => setScrapSearchQuery(e.target.value)} className="summary-search-input" />
-              <button className="pvsm-btn-load" onClick={fetchScrapData}>🔄 Refresh Scrap</button>
+              <button className="pvsm-btn-load" onClick={fetchScrapData}>🔄Refresh Scrap</button>
             </div>
 
             <div className="table-scroll">
-              <table className="summary-table scrap-table" style={{borderCollapse: 'collapse', width: '100%', textAlign: 'center'}}>
+              <table className="summary-table scrap-table">
                 <thead>
                   <tr>
-                    <th style={{border: '1px solid #ddd', padding: '10px', background: '#f5f7fa', minWidth: '180px'}}>MO / Variant / Reason</th>
-                    <th style={{border: '1px solid #ddd', padding: '10px', background: '#f5f7fa'}}>Component</th>
-                    <th style={{border: '1px solid #ddd', padding: '10px', background: '#f5f7fa'}}>SHO Scrap</th>
-                    <th style={{border: '1px solid #ddd', padding: '10px', background: '#f5f7fa'}}>Channel Scrap</th>
-                    <th style={{border: '1px solid #ddd', padding: '10px', background: '#f5f7fa'}}>Overall Scrap</th>
+                    <th className="col-mo">Master Order (MO) / Reason Code</th>
+                    <th className="col-scrap">SHO Scrap</th>
+                    <th className="col-scrap">Channel Scrap</th>
+                    <th className="col-scrap" style={{color: 'var(--ac-red)'}}>Overall Scrap</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {getStructuredScrapData().length === 0 ? (
-                      <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px', border: '1px solid #ddd'}}>No Scrap Data Available.</td></tr>
-                  ) : getStructuredScrapData().map(node => (
-                    <React.Fragment key={node.mo}>
-                      {/* LEVEL 0: MO */}
-                      <tr style={{background: '#eaeff5'}}>
-                        <td rowSpan="2" onClick={() => setExpandedScrapMOs(p => ({...p, [node.mo]: !p[node.mo]}))} style={{border: '1px solid #ddd', padding: '10px', fontWeight: 'bold', cursor: 'pointer', verticalAlign: 'middle', textAlign: 'left', color: '#1a1a1a'}}>
-                            {expandedScrapMOs[node.mo] ? '▼' : '▶'} {node.mo}
+                  {getFilteredScrapData().length === 0 ? (
+                      <tr><td colSpan="4" style={{textAlign: 'center', padding: '20px'}}>No Scrap Data Available.</td></tr>
+                  ) : getFilteredScrapData().map(moNode => (
+                    <React.Fragment key={moNode.mo}>
+                      {/* MO Main Row */}
+                      <tr onClick={() => setExpandedScrapMOs(p => ({...p, [moNode.mo]: !p[moNode.mo]}))} className={`row-mo ${expandedScrapMOs[moNode.mo] ? 'row-mo-expanded' : ''}`}>
+                        <td className="mo-toggle-cell" style={{fontWeight: '700', cursor: 'pointer'}}>
+                            {expandedScrapMOs[moNode.mo] ? '▼' : '▶'} {moNode.mo}
                         </td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', fontWeight: '600', color: '#1a1a1a', textAlign: 'center'}}>IR</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: '#333'}}>{node.ir.sho}</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: '#333'}}>{node.ir.chan}</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: 'var(--ac-red)', fontWeight: 'bold'}}>{node.ir.tot}</td>
-                      </tr>
-                      <tr style={{background: '#eaeff5'}}>
-                        <td style={{border: '1px solid #ddd', padding: '6px', fontWeight: '600', color: '#1a1a1a', textAlign: 'center'}}>OR</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: '#333'}}>{node.or.sho}</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: '#333'}}>{node.or.chan}</td>
-                        <td style={{border: '1px solid #ddd', padding: '6px', color: 'var(--ac-red)', fontWeight: 'bold'}}>{node.or.tot}</td>
+                        <td className="cell-scrap-sub">{moNode.sho_scrap}</td>
+                        <td className="cell-scrap-sub">{moNode.channel_scrap}</td>
+                        <td className="cell-scrap-total" style={{color: 'var(--ac-red)'}}>{moNode.total_scrap}</td>
                       </tr>
                       
-                      {/* LEVEL 1: VARIANT */}
-                      {expandedScrapMOs[node.mo] && Object.entries(node.variants).map(([vName, vData]) => {
-                         const vKey = `${node.mo}-${vName}`;
+                      {/* Reason Breakdown Level */}
+                      {expandedScrapMOs[moNode.mo] && Object.values(moNode.breakdown).map(rcNode => {
+                         const rcKey = `${moNode.mo}-${rcNode.reason}`;
                          return (
-                            <React.Fragment key={vKey}>
-                                <tr style={{background: '#fcfcfc'}}>
-                                    <td rowSpan="2" onClick={() => setExpandedScrapVariants(p => ({...p, [vKey]: !p[vKey]}))} style={{border: '1px solid #ddd', padding: '8px', paddingLeft: '30px', cursor: 'pointer', verticalAlign: 'middle', textAlign: 'left', color: '#0f1b33', fontWeight: '500'}}>
-                                        {expandedScrapVariants[vKey] ? '▼' : '▶'} {vName}
+                            <React.Fragment key={rcNode.reason}>
+                                <tr onClick={() => setExpandedScrapReasons(p => ({...p, [rcKey]: !p[rcKey]}))} className="row-variant" style={{background: '#fafafa', cursor: 'pointer'}}>
+                                    <td className="variant-toggle-cell" style={{paddingLeft: '30px', color: '#0f1b33'}}>
+                                        {expandedScrapReasons[rcKey] ? '▼' : '▶'} {rcNode.reason}
                                     </td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#2b2b2b', textAlign: 'center'}}>IR</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#555'}}>{vData.ir.sho || '-'}</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#555'}}>{vData.ir.chan || '-'}</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', fontWeight: '600', color: '#d32f2f'}}>{vData.ir.tot}</td>
-                                </tr>
-                                <tr style={{background: '#fcfcfc'}}>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#2b2b2b', textAlign: 'center'}}>OR</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#555'}}>{vData.or.sho || '-'}</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', color: '#555'}}>{vData.or.chan || '-'}</td>
-                                    <td style={{border: '1px solid #ddd', padding: '6px', fontWeight: '600', color: '#d32f2f'}}>{vData.or.tot}</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td className="cell-scrap-total">{rcNode.total}</td>
                                 </tr>
 
-                                {/* LEVEL 2: REASON CODE */}
-                                {expandedScrapVariants[vKey] && Object.entries(vData.reasons).map(([reason, rData]) => (
-                                    <React.Fragment key={`${vKey}-${reason}`}>
-                                        <tr style={{background: '#ffffff'}}>
-                                            <td rowSpan="2" style={{border: '1px solid #ddd', padding: '6px', paddingLeft: '50px', verticalAlign: 'middle', textAlign: 'left', fontSize: '13px', color: '#5b6478', fontWeight: '500'}}>
-                                                {reason}
-                                            </td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#555', textAlign: 'center'}}>IR</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#777'}}>{rData.ir.sho}</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#777'}}>{rData.ir.chan}</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', fontWeight: '600', color: '#e53935'}}>{rData.ir.tot}</td>
-                                        </tr>
-                                        <tr style={{background: '#ffffff'}}>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#555', textAlign: 'center'}}>OR</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#777'}}>{rData.or.sho}</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', color: '#777'}}>{rData.or.chan}</td>
-                                            <td style={{border: '1px solid #ddd', padding: '4px', fontSize: '13px', fontWeight: '600', color: '#e53935'}}>{rData.or.tot}</td>
-                                        </tr>
-                                    </React.Fragment>
+                                {/* Variant & Type Split Level */}
+                                {expandedScrapReasons[rcKey] && Object.entries(rcNode.types).map(([vName, vStats]) => (
+                                    <tr key={`${rcKey}-${vName}`} style={{background: '#ffffff'}}>
+                                        <td style={{paddingLeft: '50px', fontSize: '11.5px', color: '#5b6478'}}>
+                                            <strong>{vName}</strong> (IM: {vStats.IM} | OM: {vStats.OM} | Other: {vStats.other})
+                                        </td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td className="cell-scrap-sub" style={{fontWeight: '600'}}>{vStats.total}</td>
+                                    </tr>
                                 ))}
                             </React.Fragment>
                          );
@@ -1058,6 +2136,7 @@ const Afterchannel = () => {
             </div>
           </div>
         )}
+
 
         {/* ================= NEW VISUAL FLOW VIEW (P-VSM UI) ================= */}
         {activeTab === 'visualFlow' && renderPVSMFlow()}

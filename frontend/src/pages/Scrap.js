@@ -37,7 +37,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
   const loadHistoryLogs = async () => {
     setLoadingHistory(true);
     try {
-      const res = await fetch(`${API_URL}/api/scrap/history?department=${encodeURIComponent(department)}`);
+      const res = await fetch(`${API_BASE}/api/scrap/history?department=${encodeURIComponent(department)}`);
       const result = await res.json();
       if (result.status === 'success') {
         setHistoryRecords(result.data);
@@ -96,13 +96,13 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
     try {
       let response, result;
       if (subView === 'history') {
-        response = await fetch(`${API_URL}/api/scrap/update`, {
+        response = await fetch(`${API_BASE}/api/scrap/update`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: parseInt(selectedHistoryId), payload: dataPayload })
         });
       } else {
-        response = await fetch(`${API_URL}/api/scrap/submit`, {
+        response = await fetch(`${API_BASE}/api/scrap/submit`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

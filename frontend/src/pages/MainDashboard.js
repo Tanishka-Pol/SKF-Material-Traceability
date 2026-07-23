@@ -7,7 +7,7 @@ export default function MainDashboard() {
   const modules = [
 
     {
-      title: "Transit Buffer Weighing Data",
+      title: "Summary Report",
       desc: "Transit Buffer Entry & Calibration tracking",
       path: "/tbe",
       icon: "📦",
@@ -21,7 +21,7 @@ export default function MainDashboard() {
     },
     
     {
-      title: "After Channel Entries",
+      title: "Channel Entries",
       desc: "Dismantling, Rework, Accurate & CPS Entry",
       path: "/afterchannel",
       icon: "⚙️",
