@@ -417,7 +417,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
       </div>
 
       {subView === 'entry' && (
-        <div className="table-wrapper">
+        <div className="scrap-table-wrapper">
           {department === 'Heat Treatment' && renderHTLayout('newht')}
           {department === 'Face and OD' && renderFODLayout('newfod')}
           {department === 'DGBB' && renderDGBBLayout('newdgbb')}

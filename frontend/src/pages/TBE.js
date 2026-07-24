@@ -222,11 +222,11 @@ const TBE = () => {
   // --- REVISED SORTING LOGIC ---
   const sortedSummary = [...filteredSummary].sort((a, b) => {
     // If no specific column is clicked, default to Date-based sorting instead of Family
-    if (!sortConfig) {
-      const dateA = getEarliestDate(a);
-      const dateB = getEarliestDate(b);
-      return dateA - dateB;
-    }
+  if (!sortConfig) {
+  const dateA = getEarliestDate(a);
+  const dateB = getEarliestDate(b);
+  return dateB - dateA;
+}
 
     const { key, direction } = sortConfig;
     const valA = a[key];
@@ -291,10 +291,7 @@ const isCalcActive = true;
   return (
     <div className="traceability-container">
       <div className="header-section">
-        <div>
-          <h1>Transit Buffer Entry Tracking Log</h1>
-          <p className="sub-tag">Synchronized Channel & Ring Family Sequencing Matrices</p>
-        </div>
+       
         
         {/* --- CALCULATOR WIDGET --- */}
 <div className="calculator-area">
@@ -402,57 +399,37 @@ const isCalcActive = true;
           <table className="trace-table">
             <thead>
               {/* Row 1 Sticky Headers with high-contrast distinct section colors */}
-              <tr className="super-header">
-                <th colSpan="4" className="th-meta">
-                    Connection Mapping
-                </th>
+            <tr className="super-header">
+            <th colSpan="4" className="th-meta">
+                Connection Mapping
+            </th>
 
-                <th colSpan="3" className="th-sho">
-                    SHO Department & Scrap (Split)
-                </th>
+            <th colSpan="2" className="th-sho">
+                SHO Department
+            </th>
 
-                <th colSpan="2" className="th-tb">
-                    Transit Buffer (Split)
-                </th>
+            <th colSpan="2" className="th-tb">
+                Transit Buffer
+            </th>
 
-                <th colSpan="3" className="th-ch">
-                    Channel Section (Combined Rollup)
-                </th>
+            <th colSpan="3" className="th-ch">
+                Channel Section
+            </th>
 
-                <th colSpan="3" className="th-after">
-                    After Channel
-                </th>
+            <th colSpan="3" className="th-after">
+                After Channel
+            </th>
 
-                <th className="th-status">
-                    Status Tracker
-                </th>
-              </tr>
+            <th colSpan="1" className="th-scrap">
+                Scrap
+            </th>
+
+            <th colSpan="1" className="th-status">
+                Status
+            </th>
+        </tr>
               {/* Row 2 Sticky Headers with corresponding matching tint colors */}
-               <tr className="sub-header">
-                <th className="sub-meta">Channel Ref</th>
-                <th className="sub-meta">MO</th>
-                <th className="sub-meta">Ring Family</th>
-                <th className="sub-meta">Ring Type</th>
-                
-                <th className="sub-sho">Qty</th>
-                <th className="sub-sho">In Date</th>
-                {/* NEW SCRAP COLUMN INJECTED HERE */}
-                <th className="sub-scrap">Scrap Qty</th>
-
-                <th className="sub-tb">Qty</th>
-                <th className="sub-tb">Out Date</th>
-                
-                <th className="sub-ch">Qty</th>
-                <th className="sub-ch">In Date</th>
-                <th className="sub-ch">Out Date</th>
-
-                <th className="sub-after">Accurate</th>
-                <th className="sub-after">Auto Packaging</th>
-                <th className="sub-after">FPS</th>
-
-                <th className="sub-status">Tracking Status</th>
-              </tr>
-              {/* Row 2 Sticky Headers with corresponding matching tint colors & sortable capabilities */}
+                             {/* Row 2 Sticky Headers with corresponding matching tint colors & sortable capabilities */}
               <tr className="sub-header" style={{ height: '38px', userSelect: 'none' }}>
                 <th onClick={() => requestSort('channel_ref')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#f8fafc', color: '#1e293b', border: '1px solid #cbd5e1', padding: '10px', fontSize: '0.9em' }}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><span>Channel Ref</span><span style={{fontSize: '0.8em', opacity: 0.6}}>{getSortIcon('channel_ref')}</span></div>
@@ -472,9 +449,6 @@ const isCalcActive = true;
                 </th>
                 <th onClick={() => requestSort('sho_in')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '10px', fontSize: '0.9em' }}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><span>In Date</span><span style={{fontSize: '0.8em', opacity: 0.6}}>{getSortIcon('sho_in')}</span></div>
-                </th>
-                <th onClick={() => requestSort('scrap_qty')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px', fontSize: '0.9em' }}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><span>Scrap Qty</span><span style={{fontSize: '0.8em', opacity: 0.6}}>{getSortIcon('scrap_qty')}</span></div>
                 </th>
 
                 <th onClick={() => requestSort('tb_qty')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#ffedd5', color: '#9a3412', border: '1px solid #fed7aa', padding: '10px', fontSize: '0.9em' }}>
@@ -551,6 +525,7 @@ const isCalcActive = true;
                     padding: '10px',
                     fontSize: '0.9em'
                 }}
+                
             >
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <span>FPS</span>
@@ -559,7 +534,10 @@ const isCalcActive = true;
                     </span>
                 </div>
 </th>
-                
+                 <th onClick={() => requestSort('scrap_qty')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px', fontSize: '0.9em' }}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><span>Scrap Qty</span><span style={{fontSize: '0.8em', opacity: 0.6}}>{getSortIcon('scrap_qty')}</span></div>
+                </th>
+
                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', position: 'sticky', top: '42px', zIndex: 10, background: '#f8fafc', color: '#1e293b', border: '1px solid #cbd5e1', padding: '10px', fontSize: '0.9em' }}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><span>Tracking Status</span><span style={{fontSize: '0.8em', opacity: 0.6}}>{getSortIcon('status')}</span></div>
                 </th>
@@ -610,14 +588,6 @@ const isCalcActive = true;
                       {row.sho_qty ? Number(row.sho_qty).toLocaleString() : '0'}
                     </td>
                     <td className="cell-plain-sho">{row.sho_in || '-'}</td>
-                    
-                    {/* SCRAP Split */}
-                    <td 
-                      onMouseDown={(e) => handleMouseDown(e, `scrap-${idx}`, row.scrap_qty)}
-                      onMouseEnter={(e) => handleMouseEnter(e, `scrap-${idx}`, row.scrap_qty)}
-                      className={`cell-selectable cell-scrap ${selectedCells[`scrap-${idx}`] !== undefined ? 'cell-scrap-selected' : ''}`}>
-                      {row.scrap_qty ? Number(row.scrap_qty).toLocaleString() : '0'}
-                    </td>
 
                     {/* TB Split */}
                     <td 
@@ -663,6 +633,14 @@ const isCalcActive = true;
                         {row.fps_qty ? Number(row.fps_qty).toLocaleString() : '0'}
                       </td>
                     )}
+
+                     {/* SCRAP Split */}
+                    <td 
+                      onMouseDown={(e) => handleMouseDown(e, `scrap-${idx}`, row.scrap_qty)}
+                      onMouseEnter={(e) => handleMouseEnter(e, `scrap-${idx}`, row.scrap_qty)}
+                      className={`cell-selectable cell-scrap ${selectedCells[`scrap-${idx}`] !== undefined ? 'cell-scrap-selected' : ''}`}>
+                      {row.scrap_qty ? Number(row.scrap_qty).toLocaleString() : '0'}
+                    </td>
                     
                     {/* Status Tracker */}
                     <td>

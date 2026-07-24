@@ -7,7 +7,7 @@ import Flow from "../components/Flow/Flow";
 import axios from "axios";
 import { FaArrowDown, FaArrowUp,  FaBoxOpen, FaTrashAlt , FaExclamationTriangle,} from "react-icons/fa";
  
-const API = 'https://scm-backend-pshv.onrender.com';
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
  
 const Afterchannel = () => {
   console.log("AFTERCHANNEL FILE LOADED");
