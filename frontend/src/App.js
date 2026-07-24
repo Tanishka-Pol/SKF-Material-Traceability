@@ -21,8 +21,6 @@ import Afterchannel from "./pages/Afterchannel";
 import SHOScheduling from "./pages/SHOScheduling";
 
 
-
-
 // 🔒 THE BOUNCER
 const ProtectedRoute = ({ children }) => {
   const token = sessionStorage.getItem("token");

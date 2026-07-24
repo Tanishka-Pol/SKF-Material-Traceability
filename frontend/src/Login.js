@@ -56,11 +56,10 @@ function Login() {
           alt="SKF Logo"
           className="skf-logo"
         />
-        <h2>AI Driven Supply Chain Management</h2>
+        <h2>Material Traceability</h2>
         
         <p>
-          Intelligent Manufacturing • Traceability • Transit Buffer •
-          Production Monitoring • Analytics
+           • Traceability •Production Monitoring • Analytics
         </p>
 
       </div>
