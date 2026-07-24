@@ -51,92 +51,84 @@ function createPlaybackEngine({ pathRefs, lengthsRef, particleRef, tokenRef }) {
 
   function resetAll() {
 
-    Object.entries(pathRefs.current).forEach(([id, node]) => {
-      if (!node) return;
-      const length = lengthsRef.current[id] || node.getTotalLength();
-      node.style.strokeDasharray = `${length}`;
-      node.style.strokeDashoffset = `${length}`;
-      node.classList.remove("is-active", "is-revealed");
-    });
+  Object.values(pathRefs.current).forEach((node) => {
+    if (!node) return;
 
-    FLOW_ROUTES.forEach((edge) => {
-      clearGlow(edge.from);
-      clearGlow(edge.to);
-    });
+    node.style.strokeDasharray = "none";
+    node.style.strokeDashoffset = "0";
 
-    if (particleRef.current) {
-      particleRef.current.classList.remove("is-visible");
+    node.classList.remove("is-active");
+    node.classList.remove("is-revealed");
+  });
+
+  if (particleRef.current) {
+    particleRef.current.classList.remove("is-visible");
+  }
+
+}
+
+  function animateSegment(edgeId, token) {
+
+  return new Promise((resolve) => {
+
+    const node = pathRefs.current[edgeId];
+    const edge = getEdgeById(edgeId);
+
+    if (!node || !edge) {
+      resolve();
+      return;
     }
 
-  }
+    const style = FLOW_STYLES[edge.type] || FLOW_STYLES.material;
+    const length = lengthsRef.current[edgeId] || node.getTotalLength();
 
-  function animateSegment(edgeId, token) { 
+    const particle = particleRef.current;
 
-    return new Promise((resolve) => {
+    if (particle) {
+      particle.setAttribute(
+        "class",
+        `flow-particle is-visible ${style.particleClass}`
+      );
+    }
 
-      const node = pathRefs.current[edgeId];
-      const edge = getEdgeById(edgeId);
+    const duration = Math.min(2800, Math.max(1400, length * 2.5));
+    const start = performance.now();
 
-      if (!node || !edge) {
-      resolve();
-      return 
-  }
+    function frame(now) {
 
-      const style = FLOW_STYLES[edge.type] || FLOW_STYLES.material;
-      const length = lengthsRef.current[edgeId] || node.getTotalLength();
-
-      node.classList.remove("is-revealed");
-      node.classList.add("is-active");
-
-      const particle = particleRef.current;
-      if (particle) {
-        particle.setAttribute("class", `flow-particle is-visible ${style.particleClass}`);
+      if (tokenRef.current !== token) {
+        if (particle) {
+          particle.classList.remove("is-visible");
+        }
+        resolve();
+        return;
       }
 
-      const duration = Math.min(1600, Math.max(550, length * 1.4));
-      const start = performance.now();
+      const progress = Math.min(1, (now - start) / duration);
 
-      function frame(now) {
+      const point = node.getPointAtLength(length * progress);
 
-        if (tokenRef.current !== token) {
-          resolve();
-          return;
-        }
+      if (particle) {
+        particle.setAttribute("cx", point.x);
+        particle.setAttribute("cy", point.y);
+      }
 
-        const t = Math.min(1, (now - start) / duration);
-
-        node.style.strokeDashoffset = `${length * (1 - t)}`;
-
-        const point = node.getPointAtLength(length * t);
-        if (particle) {
-          particle.setAttribute("cx", point.x);
-          particle.setAttribute("cy", point.y);
-        }
-
-        if (t < 1) {
-          requestAnimationFrame(frame);
-          return;
-        }
-
-        node.classList.remove("is-active");
-        node.classList.add("is-revealed");
-
-        // Scrap rails settle into their dashed look once travelled
-        if (edge.type === "scrap" && style.dashArray) {
-          node.style.strokeDasharray = style.dashArray;
-          node.style.strokeDashoffset = "0";
-        }
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
 
         glowCard(edge.to, style);
-        resolve();
 
+        resolve();
       }
 
-      requestAnimationFrame(frame);
+    }
 
-    });
+    requestAnimationFrame(frame);
 
-  }
+  });
+
+}
 
   async function playRoute(edgeIds, token) {
     for (const edgeId of edgeIds) {
@@ -158,21 +150,27 @@ function createPlaybackEngine({ pathRefs, lengthsRef, particleRef, tokenRef }) {
 
   async function playAll() {
 
-    const token = ++tokenRef.current;
-    resetAll();
-    await wait(150);
+  const token = ++tokenRef.current;
+
+  resetAll();
+
+  await wait(300);
+
+  while (tokenRef.current === token) {
 
     for (const mo of mockMO) {
-      if (tokenRef.current !== token) return;
-      await playMO(mo, token);
-      await wait(350);
-    }
 
-    if (particleRef.current) {
-      particleRef.current.classList.remove("is-visible");
+      if (tokenRef.current !== token) return;
+
+      await playMO(mo, token);
+
+      await wait(300);
+
     }
 
   }
+
+}
 
   // Backend-ready single-segment trigger:
   //   window.SKF_FLOW.playSegment("Channel", "Bearing Storage")
@@ -304,21 +302,21 @@ const Flow = () => {
 
   useEffect(() => {
 
-    const handleLoadFlow = () => engine.playAll();
+      // Start animation automatically when Visual Flow opens
+      engine.playAll();
 
-    window.addEventListener("skf:load-flow", handleLoadFlow);
-    window.SKF_FLOW = {
-      playAll: engine.playAll,
-      playSegment: engine.playSegment,
-      reset: engine.resetAll,
-    };
+      // Keep backend functions available
+      window.SKF_FLOW = {
+        playSegment: engine.playSegment,
+        reset: engine.resetAll,
+      };
 
-    return () => {
-      window.removeEventListener("skf:load-flow", handleLoadFlow);
-      delete window.SKF_FLOW
-    };
+      return () => {
+        engine.resetAll();
+        delete window.SKF_FLOW;
+      };
 
-  }, [engine]);
+    }, [engine]);
 
   return (
 
@@ -402,7 +400,13 @@ const Flow = () => {
         />
       ))}
 
-      <circle ref={particleRef} className="flow-particle" r="4.5" cx="0" cy="0" />
+    <circle
+      ref={particleRef}
+      className="flow-particle"
+      r="8"
+      cx="0"
+      cy="0"
+    />
 
     </svg>
 

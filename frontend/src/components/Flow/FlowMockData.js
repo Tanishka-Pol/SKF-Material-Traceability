@@ -13,10 +13,11 @@
 ========================================================== */
  
 export const mockMO = [
-  { mo: "MO1001", type: "Bearing Assembly" },
-  { mo: "MO1002", type: "Rework" },
-  { mo: "MO1003", type: "Inspection" },
-  { mo: "MO1004", type: "Scrap" },
+  { mo: "MO1001", type: "Flow 1" },
+  { mo: "MO1002", type: "Flow 2" },
+  { mo: "MO1003", type: "Flow 3" },
+  { mo: "MO1004", type: "Flow 4" },
+  { mo: "MO1005", type: "Flow 5" },
 ];
  
 /* ==========================================================
@@ -30,8 +31,29 @@ export const mockMO = [
  
 export const MO_ROUTES = {
  
-  // DM -> SHO -> Transit -> Channel -> Bearing -> Accurate -> FPS
+  // DM -> SHO -> Transit -> Channel -> Bearing -> Auto Packing -> FPS
   MO1001: [
+    "dm-sho",
+    "sho-transit",
+    "transit-channel",
+    "channel-bearing",
+    "bearing-packing",
+    "packing-fps",
+  ],
+ 
+  // DM -> SHO -> Transit -> Channel -> Bearing -> accurate ->Packing -> FPS
+  MO1002: [
+    "dm-sho",
+    "sho-transit",
+    "transit-channel",
+    "channel-bearing",
+    "bearing-accurate",
+    "accurate-packing",
+    "packing-fps",
+  ],
+ 
+  // DM -> SHO -> Transit -> Channel -> Bearing -> Accurate -> FPS
+  MO1003: [
     "dm-sho",
     "sho-transit",
     "transit-channel",
@@ -40,38 +62,27 @@ export const MO_ROUTES = {
     "accurate-fps",
   ],
  
-  // DM -> SHO -> Transit -> Channel -> Rework -> Channel (return)
-  // -> Bearing -> Packing -> FPS
-  MO1002: [
+  // DM -> SHO -> Transit -> Channel -> rework-> channel(return)-> bearing ->accurate ->fps
+  MO1004: [
     "dm-sho",
     "sho-transit",
     "transit-channel",
     "channel-rework",
     "channel-rework-return",
     "channel-bearing",
-    "bearing-packing",
-    "packing-fps",
-  ],
- 
-  // DM -> SHO -> Transit -> Channel -> Bearing -> Accurate
-  // -> Packing (return) -> FPS
-  MO1003: [
-    "dm-sho",
-    "sho-transit",
-    "transit-channel",
-    "channel-bearing",
     "bearing-accurate",
-    "accurate-packing-return",
-    "packing-fps",
+    "accurate-fps",
   ],
- 
-  // DM -> SHO -> Transit -> Channel -> Disassembly -> Common Scrap
-  MO1004: [
+  // DM -> SHO -> Transit -> Channel -> disaasembly -> channel(return)-> bearing -> auto packing ->fps
+  MO1005: [
     "dm-sho",
     "sho-transit",
     "transit-channel",
     "channel-disassembly",
-    "disassembly-scrap",
+    "channel-disassembly-return",
+    "channel-bearing",
+    "bearing-packing",
+    "packing-fps",
   ],
  
 };

@@ -67,7 +67,7 @@ console.log("ProcessCard ID:", id);
           <div className="title-wrapper">
 
            <h4 className="process-title">
-       {title}
+              {title}
             </h4>
 
             <p className="process-subtitle">
@@ -108,87 +108,87 @@ console.log("ProcessCard ID:", id);
             </span>
           </div>
         )}
-{id === "dm-store" && (
-  <>
-    <div className="metric-col">
-      <FaBoxOpen className="metric-icon leftover-icon" />
-      <span className="metric-label">IR</span>
-      <span className="metric-value value-outgoing">
-        {ir}
-      </span>
-      <span className="metric-unit">PCS</span>
-    </div>
+        {id === "dm-store" && (
+          <>
+            <div className="metric-col">
+              <FaBoxOpen className="metric-icon leftover-icon" />
+              <span className="metric-label">IR</span>
+              <span className="metric-value value-outgoing">
+                {ir}
+              </span>
+              <span className="metric-unit">PCS</span>
+            </div>
 
-    <div className="metric-col">
-      <FaBoxOpen className="metric-icon leftover-icon" />
-      <span className="metric-label">OR</span>
-      <span className="metric-value value-outgoing">
-        {or}
-      </span>
-      <span className="metric-unit">PCS</span>
-    </div>
-  </>
-)}
+            <div className="metric-col">
+              <FaBoxOpen className="metric-icon leftover-icon" />
+              <span className="metric-label">OR</span>
+              <span className="metric-value value-outgoing">
+                {or}
+              </span>
+              <span className="metric-unit">PCS</span>
+            </div>
+          </>
+        )}
 
-{showOutgoing && (
-  <div className="metric-col">
+        {showOutgoing && (
+          <div className="metric-col">
 
-    <FaBoxOpen className="metric-icon leftover-icon" />
+            <FaBoxOpen className="metric-icon leftover-icon" />
 
-    <span className="metric-label">
-      Outgoing
-    </span>
+            <span className="metric-label">
+              Outgoing
+            </span>
 
-    <span className="metric-value value-outgoing">
-      {outgoing}
-    </span>
+            <span className="metric-value value-outgoing">
+              {outgoing}
+            </span>
 
-    <span className="metric-unit">
-      PCS
-    </span>
+            <span className="metric-unit">
+              PCS
+            </span>
 
-  </div>
-)}
+          </div>
+        )}
 
-{showScrap && (
-  <div className="metric-col">
+        {showScrap && (
+          <div className="metric-col">
 
-    <FaTrashAlt className="metric-icon scrap-icon" />
+            <FaTrashAlt className="metric-icon scrap-icon" />
 
-    <span className="metric-label">
-      Scrap
-    </span>
+            <span className="metric-label">
+              Scrap
+            </span>
 
-    <span className="metric-value value-scrap">
-      {scrap}
-    </span>
+            <span className="metric-value value-scrap">
+              {scrap}
+            </span>
 
-    <span className="metric-unit">
-      PCS
-    </span>
+            <span className="metric-unit">
+              PCS
+            </span>
 
-  </div>
-)}
+          </div>
+        )}
 
-{id === "sho" && (
-  <div className="metric-col">
+        {id === "sho" && (
+          <div className="metric-col">
 
-    <FaArrowUp className="metric-icon outgoing-icon" />
+            <FaArrowUp className="metric-icon outgoing-icon" />
 
-    <span className="metric-label">
-      Leftover
-    </span>
+            <span className="metric-label">
+              Leftover
+            </span>
 
-    <span className="metric-value value-outgoing">
-      {outgoing}
-    </span>
+            <span className="metric-value value-outgoing">
+              {outgoing}
+            </span>
 
-    <span className="metric-unit">
-      PCS
-    </span>
+            <span className="metric-unit">
+              PCS
+            </span>
 
-  </div>
-)}
+          </div>
+        )}
 
         </div>
 

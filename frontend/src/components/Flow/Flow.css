@@ -26,18 +26,18 @@
    just sets the resting state. */
 .flow-path {
   fill: none;
-  opacity: 0.85;
+  opacity: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: all 0.3s ease;
 }
- 
+
+/* Keep these so card glow logic still works */
 .flow-path.is-active {
   opacity: 1;
 }
- 
+
 .flow-path.is-revealed {
-  opacity: 0.85;
+  opacity: 1;
 }
  
 /* Subtle glow on paths for premium feel */
@@ -81,17 +81,16 @@
 }
  
 .flow-card-glow-material {
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35),
-    0 10px 22px rgba(22, 163, 74, 0.25) !important;
+    border: 2px solid #22C55E !important;
+    border-radius: 12px;
 }
- 
+
 .flow-card-glow-return {
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.35),
-    0 10px 22px rgba(220, 38, 38, 0.25) !important;
+    border: 2px solid #EF4444 !important;
+    border-radius: 12px;
 }
- 
+
 .flow-card-glow-scrap {
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35),
-    0 10px 22px rgba(245, 158, 11, 0.25) !important;
+    border: 2px solid #A855F7 !important;
+    border-radius: 12px;
 }
- 

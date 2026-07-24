@@ -881,6 +881,7 @@ if (deptKey === "channel") {
 
 
 const NodeCard = ({
+    flowId,
     title,
     subtitle,
     icon,
@@ -895,8 +896,11 @@ const NodeCard = ({
     borderCls
 }) => (
 
-<div className={`process-card-blueprint ${borderCls}`}>
-  <FaExclamationTriangle className="delta-icon-corner" />
+  <div
+    className={`process-card-blueprint ${borderCls}`}
+    data-flow-id={flowId}
+  >
+    <FaExclamationTriangle className="delta-icon-corner" />
 
 {/* Header */}
 <div className="card-header-bp">
@@ -1071,47 +1075,37 @@ const NodeCard = ({
                   <div className="pvsm-grid">
                     
                     {/* ROW 1 */}
-                    <div className="node-pos-dmstore"
-                    data-flow-id="dm-store">
-                        <NodeCard title="DM Store" subtitle="Material Storage" icon="🏛"  mOut={0} mIR={0} mOR={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-dmstore">
+                        <NodeCard flowId="dm-store" title="DM Store" subtitle="Material Storage" icon="🏛"  mOut={0} mIR={0} mOR={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-sho"
-                     data-flow-id="sho">
-                        <NodeCard title="SHO" subtitle="Shared Handling" icon="📈" mScrap={0} mLeftover={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-sho">
+                        <NodeCard flowId="sho" title="SHO" subtitle="Shared Handling" icon="📈" mScrap={0} mLeftover={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-transit"
-                     data-flow-id="transit-buffer">
-                        <NodeCard title="Transit Buffer" subtitle="Buffer" icon="🚚"  mOut={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-transit">
+                        <NodeCard flowId="transit-buffer" title="Transit Buffer" subtitle="Buffer" icon="🚚"  mOut={0} visited="Not Visited" borderCls="" />
                     </div>
-                    <div className="node-pos-channel"
-                     data-flow-id="channel">
-                        <NodeCard title="Channel" subtitle="Production" icon="🖧" mOut={metrics.channel.out}  visited={metrics.channel.visited} borderCls="" />
+                    <div className="node-pos-channel">
+                        <NodeCard flowId="channel" title="Channel" subtitle="Production" icon="🖧" mOut={metrics.channel.out}  visited={metrics.channel.visited} borderCls="" />
                     </div>
-                    <div className="node-pos-bearingstore"
-                     data-flow-id="bearing-storage">
-                        <NodeCard title="Bearing Storage" subtitle="Storage" icon="📦" mIn={0} mOut={0} visited="Not Visited" borderCls="" />
+                    <div className="node-pos-bearingstore">
+                        <NodeCard flowId="bearing-storage" title="Bearing Storage" subtitle="Storage" icon="📦" mIn={0} mOut={0} visited="Not Visited" borderCls="" />
                     </div>
 
                     {/* ROW 2 */}
-                    <div className="node-pos-cps"
-                     data-flow-id="cps">
-                        <NodeCard title="CPS" subtitle="Storage" icon="🏢" mIn={metrics.cps.in} mOut={metrics.cps.out} visited={metrics.cps.visited} borderCls="border-dashed" />
+                    <div className="node-pos-cps">
+                        <NodeCard flowId="cps" title="CPS" subtitle="Storage" icon="🏢" mIn={metrics.cps.in} mOut={metrics.cps.out} visited={metrics.cps.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-disassembly"
-                     data-flow-id="disassembly">
-                        <NodeCard title="Disassembly Area" subtitle="Rework" icon="🔧" mIn={metrics.disassembly.in} mOut={metrics.disassembly.out} visited={metrics.disassembly.visited} borderCls="border-dashed" />
+                    <div className="node-pos-disassembly">
+                        <NodeCard flowId="disassembly" title="Disassembly Area" subtitle="Rework" icon="🔧" mIn={metrics.disassembly.in} mOut={metrics.disassembly.out} visited={metrics.disassembly.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-rework"
-                     data-flow-id="rework">
-                        <NodeCard title="Rework Area" subtitle="Repair" icon="🔄" mIn={metrics.rework.in} mOut={metrics.rework.out}  visited={metrics.rework.visited} borderCls="border-dashed" />
+                    <div className="node-pos-rework">
+                        <NodeCard flowId="rework" title="Rework Area" subtitle="Repair" icon="🔄" mIn={metrics.rework.in} mOut={metrics.rework.out}  visited={metrics.rework.visited} borderCls="border-dashed" />
                     </div>
-                    <div className="node-pos-accurate"
-                     data-flow-id="accurate">
-                        <NodeCard title="Accurate" subtitle="Inspection" icon="🎯"  mOut={metrics.accurate.out} visited={metrics.accurate.visited} borderCls="border-green" />
+                    <div className="node-pos-accurate">
+                        <NodeCard flowId="accurate" title="Accurate" subtitle="Inspection" icon="🎯"  mOut={metrics.accurate.out} visited={metrics.accurate.visited} borderCls="border-green" />
                     </div>
-                    <div className="node-pos-autopacking"
-                     data-flow-id="auto-packing">
-                        <NodeCard title="Auto Packing" subtitle="Packing" icon="🏭"  mOut={metrics.autoPacking.out} visited={metrics.autoPacking.visited} borderCls="border-green" />
+                    <div className="node-pos-autopacking">
+                        <NodeCard flowId="auto-packing" title="Auto Packing" subtitle="Packing" icon="🏭"  mOut={metrics.autoPacking.out} visited={metrics.autoPacking.visited} borderCls="border-green" />
                     </div>
 
                     {/* ROW 3 */}
@@ -1123,13 +1117,11 @@ const NodeCard = ({
                             <div className="pvsm-legend-item"><div className="pvsm-legend-line line-orange-dash"></div> Scrap Flow</div>
                         </div>
                     </div>
-                    <div className="node-pos-commonscrap"
-                     data-flow-id="common-scrap">
-                        <NodeCard title="Common Scrap" subtitle="Scrap" icon="🗑" mScrap={metrics.commonScrap.scrap} visited="Not Visited" borderCls="border-red" />
+                    <div className="node-pos-commonscrap">
+                        <NodeCard flowId="common-scrap" title="Common Scrap" subtitle="Scrap" icon="🗑" mScrap={metrics.commonScrap.scrap} visited="Not Visited" borderCls="border-red" />
                     </div>
-                    <div className="node-pos-fps"
-                     data-flow-id="fps">
-                        <NodeCard title="FPS" subtitle="Finished Product" icon="🛡" mIn={metrics.fps.in} mOut={metrics.fps.out} visited={metrics.fps.visited} borderCls="border-green" />
+                    <div className="node-pos-fps">
+                        <NodeCard flowId="fps" title="FPS" subtitle="Finished Product" icon="🛡" mIn={metrics.fps.in} mOut={metrics.fps.out} visited={metrics.fps.visited} borderCls="border-green" />
                     </div>
 
                 </div>
