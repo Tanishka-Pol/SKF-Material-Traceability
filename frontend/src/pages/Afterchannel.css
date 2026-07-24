@@ -392,15 +392,16 @@
     position: relative;
 
     width: 100%;
-    min-width: 1400px;
     min-height: 750px;
 
-    padding: 1px 40px 20px;
+    padding: 20px;
 
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 
     box-sizing: border-box;
 }
+
 .pvsm-flow-svg{
     position:absolute;
     top:0;
@@ -729,12 +730,6 @@ display:flex;
     color:white;
     font-weight:600;
     cursor:pointer;
-}
-
-.pvsm-grid{
-    position:relative;
-    z-index:5;
-
 }
 
 .flow-material{
@@ -1171,28 +1166,36 @@ display:flex;
    RESPONSIVE
 ========================================== */
 
-@media (max-width:1200px){
+@media (max-width: 1440px){
 
-  .transit-layout{
-    flex-direction:column;
-  }
+    .pvsm-card{
+        width:170px;
+    }
 
-  .transit-right{
-    width:100%;
-  }
+    .pvsm-grid{
+
+        column-gap:16px;
+
+        row-gap:55px;
+
+        grid-template-columns:
+            repeat(7,170px);
+    }
+
 }
 
-@media (max-width:768px){
+@media (max-width: 1280px){
 
-  .transit-left .channel-grid{
-    grid-template-columns:1fr;
-  }
+    .pvsm-card{
+        width:155px;
+    }
 
-  .live-weight-badge{
-    font-size:32px;
-  }
+    .pvsm-grid{
 
-  .qty-number{
-    font-size:42px;
-  }
+        grid-template-columns:
+            repeat(7,155px);
+
+        column-gap:12px;
+    }
+
 }

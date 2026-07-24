@@ -459,7 +459,7 @@ function drawScrapMiddle(fromRect, toRect) {
 
   const entry = {
     x: toRect.left,
-    y: toRect.top + toRect.height * 0.35
+    y: toRect.top + toRect.height * 0.20
   };
 
   // between SHO scrap rail and CPS card
