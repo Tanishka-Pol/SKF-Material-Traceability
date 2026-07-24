@@ -1,123 +1,87 @@
-.process-card-blueprint{  
-    width:200px;
-    min-height:170px;
+.process-card-blueprint{
 
-    position:relative;
+    width: clamp(180px, 14vw, 200px);
 
-    background:#fff;
-    border:1px solid #E5E7EB;
-    border-radius:12px;
+    min-height: clamp(155px, 18vh, 170px);
 
-    box-shadow:0 6px 18px rgba(0,0,0,.08);
+    position: relative;
 
-    padding:12px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
 
-    display:flex;
-    flex-direction:column;
-    box-sizing:border-box;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
 
-    position:relative;
-    overflow:visible;
+    padding: clamp(10px, 1vw, 12px);
+
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: border-box;
+
+    overflow: visible;
 
 }
 
 .process-card-blueprint::after{
 
     content:"";
-
     position:absolute;
-
     inset:-3px;
-
     border-radius:14px;
-
     pointer-events:none;
-
     opacity:0;
-
     transition:.25s;
-
 }
 
 .flow-card-glow-material::after{
-
     opacity:1;
-
     border:2px solid #22c55e;
-
     box-shadow:0 0 12px rgba(34,197,94,.45);
-
 }
 
 .flow-card-glow-return::after{
-
     opacity:1;
-
     border:2px solid #ef4444;
-
     box-shadow:0 0 12px rgba(239,68,68,.45);
-
 }
 
 .flow-card-glow-scrap::after{
-
     opacity:1;
-
     border:2px solid #a855f7;
-
     box-shadow:0 0 12px rgba(168,85,247,.45);
-
 }
 
 .delta-icon-corner{
     position:absolute;
-
     top:8px;
     right:8px;
-
     color:#F4C430;
     font-size:16px;
-
     z-index:100;
 }
 /* Header */
 
 .card-header-bp{
-
     width:100%;
-
 }
 
 .header-top-row{
-
     display:flex;
-
     align-items:flex-start;
-
     gap:9px;
-
 }
 
 .process-icon-box{
-
     width:28px;
-
     height:28px;
-
     background:#EEF5FF;
-
     color:#005CB9;
-
     border-radius:8px;
-
     display:flex;
-
     justify-content:center;
-
     align-items:center;
-
     flex-shrink:0;
-
 }
 
 .title-wrapper{
@@ -127,31 +91,25 @@
     min-height:40px;
 }
 .process-title{
-    margin:0;
-    font-size:14px;
-    font-weight:700;
-    color:#16355C;
-    line-height:20px;
-    min-height:3px;
+    margin: 0;
+    font-size: clamp(13px, 1vw, 14px);
+    font-weight: 700;
+    color: #16355C;
+    line-height: 1.4;
+    min-height: 3px;
 }
+
 .process-subtitle{
-
-    margin-top:1px;
-
-    font-size:10px;
-
-    color:#94A3B8;
-
+    margin-top: 2px;
+    font-size: clamp(9px, 0.8vw, 10px);
+    color: #94A3B8;
 }
 
 /* Divider */
 
 .divider-bp{
-
     height:1px;
-
     background:#EEF2F7;
-
     margin:5px 0;
 
 }
@@ -159,155 +117,99 @@
 /* Metrics */
 
 .card-body-bp{
-
     width:100%;
-
 }
 
 .metrics-grid{
-
     display:flex;
-
     justify-content:space-between;
-
 }
 
 .metric-col{
-
     display:flex;
-
     flex-direction:column;
-
     align-items:center;
-
     flex:1;
-
 }
 
 .metric-icon{
-
     font-size:10px;
-
     margin-bottom:1px;
-
 }
 
 .incoming-icon{
-
     color:#16A34A;
-
 }
 
 .outgoing-icon{
-
     color:#2563EB;
-
 }
 
 .scrap-icon{
-
     color:#EF4444;
-
 }
 
 .metric-label{
-
-    font-size:9px;
-
-    color:#64748B;
-
-    font-weight:600;
-
+    font-size: clamp(8px, 0.7vw, 9px);
+    color: #64748B;
+    font-weight: 600;
 }
 
 .metric-value{
-
-    font-size:16px;
-
-    font-weight:700;
-
-    line-height:20px;
-
-    margin-top:0px;
-
+    font-size: clamp(15px, 1.2vw, 16px);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 0;
 }
 
 .value-incoming{
-
     color:#16A34A;
-
 }
 
 .value-outgoing{
-
     color:#2563EB;
-
 }
 
 .value-scrap{
-
     color:#EF4444;
-
 }
 
 .metric-unit{
-
     font-size:8px;
-
     color:#94A3B8;
-
     margin-top:0px;
-
 }
 
 /* Footer */
 
 .card-footer-bp{
-
     display:flex;
-
     justify-content:center;
-
     margin-top:9px;
-
 }
 
 .status-pill-bp{
-
     padding:3px 13px;
-
     border-radius:13px;
-
     font-size:9px;
-
     font-weight:600;
-
 }
 
 .pill-not-visited{
-
     background:#EEF2F7;
-
     color:#64748B;
-
 }
 
 .pill-finished{
-
     background:#DCFCE7;
-
     color:#15803D;
-
 }
 
 /* Hover */
 
 .process-card-blueprint:hover{
-
     transform:translateY(-2px);
-
     transition:.25s;
-
     box-shadow:0 8px 18px rgba(0,0,0,.10);
 
 }

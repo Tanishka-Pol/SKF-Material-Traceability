@@ -307,11 +307,13 @@
    P-VSM Visual Flow Exact UI Clone
    ========================================================================== */
 
-.pvsm-wrapper{
-    background:#f1f5f9;
-    border-radius:8px;
-    border:1px solid #e2e8f0;
-     padding:15px 0 0 0;
+.pvsm-wrapper {
+    width: 100%;
+    min-height: calc(100vh - 70px);   /* Adjust 70px if your navbar height is different */
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: auto;
+    background: #f5f7fb;
 }
 
 
@@ -387,11 +389,18 @@
 .pvsm-btn-load:hover { background: #1d4ed8; }
 
 .pvsm-canvas{
-    padding:1px 40px 20px;
-    position:relative;
-    overflow:hidden;
-}
+    position: relative;
 
+    width: 100%;
+    min-width: 1400px;
+    min-height: 750px;
+
+    padding: 1px 40px 20px;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+}
 .pvsm-flow-svg{
     position:absolute;
     top:0;
@@ -406,38 +415,37 @@
 }
 
 .pvsm-grid{
-    position:relative;
-    z-index:5;
-}
-/* Fixed width grid to ensure SVG alignment is flawless */
-.pvsm-grid{
-    display:grid;
+    position: relative;
+    z-index: 5;
 
-   grid-template-columns:
-    220px
-    220px
-    220px
-    220px
-    180px
-    220px
-    220px;
+    display: grid;
 
-    column-gap:25px;
-    row-gap:90px;
+    grid-template-columns:
+        minmax(180px,220px)
+        minmax(180px,220px)
+        minmax(180px,220px)
+        minmax(180px,220px)
+        minmax(150px,180px)
+        minmax(180px,220px)
+        minmax(180px,220px);
+
+    column-gap: clamp(20px,2vw,35px);
+
+    row-gap: clamp(60px,8vh,90px);
 
     grid-template-rows:
         auto
         auto
         auto;
 
-    justify-content:center;
-    align-items:start;
+    justify-content: center;
+    align-items: start;
 
-    width:max-content;
-    margin-top:50px;
-    margin-left:auto;
-    margin-right:auto;
-    position:relative;
+    width: max-content;
+
+    margin: 50px auto 0;
+
+    box-sizing: border-box;
 }
 
 /* Placement Coordinates matching Flow Diagram */

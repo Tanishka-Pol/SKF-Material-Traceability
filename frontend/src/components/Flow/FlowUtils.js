@@ -380,12 +380,12 @@ function drawDisassemblyToChannel(fromRect, toRect) {
 function drawChannelToRework(fromRect, toRect) {
 
   const start = {
-    x: fromRect.left + fromRect.width * 0.69,
+    x: fromRect.left + fromRect.width * 0.72,
     y: fromRect.bottom
   };
 
   const end = {
-    x: toRect.left + toRect.width * 0.54,
+    x: toRect.left + toRect.width * 0.42,
     y: toRect.top
   };
 
@@ -402,12 +402,12 @@ function drawChannelToRework(fromRect, toRect) {
 function drawReworkToChannel(fromRect, toRect) {
 
   const start = {
-    x: fromRect.left + fromRect.width * 0.48,
+    x: fromRect.left + fromRect.width * 0.35,
     y: fromRect.top
   };
 
   const end = {
-    x: toRect.left + fromRect.width * 0.78,
+    x: toRect.left + fromRect.width * 0.65,
     y: toRect.bottom
   };
 

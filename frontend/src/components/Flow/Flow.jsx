@@ -326,52 +326,51 @@ const Flow = () => {
       width={svgSize.width}
       height={svgSize.height}
       viewBox={`0 0 ${svgSize.width || 1} ${svgSize.height || 1}`}
+      preserveAspectRatio="xMidYMid meet"
     >
 
      <defs>
+        <marker
+          id="arrow-green"
+          markerWidth="10"
+          markerHeight="10"
+          refX="10"
+          refY="3"
+          orient="auto"
+        >
+          <path
+            d="M0,0 L0,6 L9,3 z"
+            fill="#16A34A"
+          />
+        </marker>
 
-  <marker
-    id="arrow-green"
-    markerWidth="10"
-    markerHeight="10"
-    refX="10"
-    refY="3"
-    orient="auto"
-  >
-    <path
-      d="M0,0 L0,6 L9,3 z"
-      fill="#16A34A"
-    />
-  </marker>
+        <marker
+          id="arrow-red"
+          markerWidth="10"
+          markerHeight="10"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
+          <path
+            d="M0,0 L0,6 L9,3 z"
+            fill="#DC2626"
+          />
+        </marker>
 
-  <marker
-    id="arrow-red"
-    markerWidth="10"
-    markerHeight="10"
-    refX="8"
-    refY="3"
-    orient="auto"
-  >
-    <path
-      d="M0,0 L0,6 L9,3 z"
-      fill="#DC2626"
-    />
-  </marker>
-
-  <marker
-    id="arrow-purple"
-    markerWidth="10"
-    markerHeight="10"
-    refX="8"
-    refY="3"
-    orient="auto"
-  >
+        <marker
+          id="arrow-purple"
+          markerWidth="10"
+          markerHeight="10"
+          refX="8"
+          refY="3"
+          orient="auto"
+        >
     <path
       d="M0,0 L0,6 L9,3 z"
       fill="#A855F7"
     />
   </marker>
-
 </defs>
 
       {paths.map((path) => (
@@ -393,10 +392,10 @@ const Flow = () => {
               : "url(#arrow-purple)"
           }
           markerStart={
-          path.type === "return"
-          ? `url(#arrow-return)`
-          : undefined
-}
+            path.type === "return"
+              ? "url(#arrow-red)"
+              : undefined
+          }
         />
       ))}
 
